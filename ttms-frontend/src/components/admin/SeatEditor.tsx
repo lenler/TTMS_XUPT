@@ -13,15 +13,15 @@ interface SeatEditorProps {
  */
 type SeatLayout = string[];
 
+/** 渲染演出厅座位图编辑器，用于切换座位可用状态 */
 function SeatEditor({ studioId }: SeatEditorProps) {
   const [layout, setLayout] = useState<SeatLayout>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(true);
 
   /** 加载当前座位布局（Mock 阶段使用默认布局） */
   useEffect(() => {
-    setLoading(true);
     // Mock：使用默认布局
     const defaultLayout: SeatLayout = [
       'aaaaa_aaaaa',
@@ -33,10 +33,14 @@ function SeatEditor({ studioId }: SeatEditorProps) {
       'aaaaa_aaaaa',
       'aa___aa_aa',
     ];
-    setTimeout(() => {
+    const timer = window.setTimeout(() => {
       setLayout(defaultLayout);
       setLoading(false);
     }, 200);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [studioId]);
 
   /** 点击座位格子，切换 a/_ */

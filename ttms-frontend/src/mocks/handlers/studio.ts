@@ -1,110 +1,82 @@
-// 演出厅 Mock Handler：完整 CRUD + 座位设置
+// 演出厅 Mock Handler
 
 import { http, HttpResponse } from 'msw';
-import studiosData from '../data/studios.json';
+import type { Studio } from '@/types/models';
 
-let studios = JSON.parse(JSON.stringify(studiosData)) as Array<{
-  id: number;
-  name: string;
-  rowCount: number;
-  colCount: number;
-  introduction: string;
-  status: number;
-}>;
+let studios: Studio[] = [
+  { id: 1, name: '一号激光厅', rowCount: 10, colCount: 12, introduction: '适合首映礼和大型商业演出。', status: 1 },
+  { id: 2, name: '二号杜比厅', rowCount: 8, colCount: 10, introduction: '主打沉浸式音效体验。', status: 1 },
+  { id: 3, name: '三号小剧场', rowCount: 6, colCount: 8, introduction: '适合小型话剧和校园放映。', status: 1 },
+];
+
+/** 生成统一成功响应 */
+function ok<T>(data: T, resMsg = '请求成功') {
+  return HttpResponse.json({ resCode: '10000', resMsg, data });
+}
+
+/** 生成统一失败响应 */
+function fail(resMsg: string, status = 400) {
+  return HttpResponse.json({ resCode: '40000', resMsg, data: null }, { status });
+}
+
+/** 从请求地址中解析分页参数 */
+function getPageParams(request: Request) {
+  const url = new URL(request.url);
+  return {
+    page: Number(url.searchParams.get('page') || 1),
+    pageSize: Number(url.searchParams.get('pageSize') || 10),
+    keyword: url.searchParams.get('keyword') || '',
+  };
+}
 
 export const studioHandlers = [
-  /** 查询演出厅列表 */
   http.get('/admin/api/studios', ({ request }) => {
-    const url = new URL(request.url);
-    const keyword = url.searchParams.get('keyword') || '';
-    const page = Number(url.searchParams.get('page')) || 1;
-    const pageSize = Number(url.searchParams.get('pageSize')) || 10;
-
-    let filtered = studios;
-    if (keyword) {
-      filtered = studios.filter(
-        (s) => s.name.includes(keyword) || s.introduction.includes(keyword)
-      );
-    }
-
+    const { page, pageSize, keyword } = getPageParams(request);
+    const matched = studios.filter((studio) => {
+      const text = `${studio.name}${studio.introduction}`;
+      return !keyword || text.includes(keyword);
+    });
     const start = (page - 1) * pageSize;
-    const list = filtered.slice(start, start + pageSize);
 
-    return HttpResponse.json({
-      resCode: '10000',
-      resMsg: '请求成功',
-      data: { list, total: filtered.length, page, pageSize },
+    return ok({
+      list: matched.slice(start, start + pageSize),
+      total: matched.length,
+      page,
+      pageSize,
     });
   }),
 
-  /** 查询单个演出厅 */
   http.get('/admin/api/studios/:id', ({ params }) => {
-    const studio = studios.find((s) => s.id === Number(params.id));
-    if (!studio) {
-      return HttpResponse.json({ resCode: '20004', resMsg: '数据不存在', data: null });
-    }
-    return HttpResponse.json({ resCode: '10000', resMsg: '请求成功', data: studio });
+    const id = Number(params.id);
+    const studio = studios.find((item) => item.id === id);
+    return studio ? ok(studio) : fail('演出厅不存在', 404);
   }),
 
-  /** 新增演出厅 */
   http.post('/admin/api/studios', async ({ request }) => {
-    const body = (await request.json()) as {
-      name: string;
-      rowCount: number;
-      colCount: number;
-      introduction: string;
-    };
-    const newId = Math.max(0, ...studios.map((s) => s.id)) + 1;
-    const newStudio = { ...body, id: newId, status: 1 };
-    studios.push(newStudio);
-    return HttpResponse.json({
-      resCode: '10000',
-      resMsg: '添加成功',
-      data: { id: newId },
-    });
+    const body = (await request.json()) as Omit<Studio, 'id' | 'status'>;
+    const id = Math.max(0, ...studios.map((item) => item.id)) + 1;
+    studios = [{ ...body, id, status: 1 }, ...studios];
+    return ok({ id }, '新增成功');
   }),
 
-  /** 修改演出厅 */
   http.put('/admin/api/studios/:id', async ({ request, params }) => {
-    const body = (await request.json()) as {
-      name: string;
-      rowCount: number;
-      colCount: number;
-      introduction: string;
-    };
-    const idx = studios.findIndex((s) => s.id === Number(params.id));
-    if (idx === -1) {
-      return HttpResponse.json({ resCode: '20004', resMsg: '数据不存在', data: null });
+    const id = Number(params.id);
+    const body = (await request.json()) as Omit<Studio, 'id' | 'status'>;
+    const index = studios.findIndex((item) => item.id === id);
+    if (index < 0) {
+      return fail('演出厅不存在', 404);
     }
-    studios[idx] = { ...studios[idx], ...body };
-    return HttpResponse.json({ resCode: '10000', resMsg: '修改成功', data: null });
+    studios[index] = { ...studios[index], ...body };
+    return ok(null, '修改成功');
   }),
 
-  /** 删除演出厅 */
   http.delete('/admin/api/studios/:id', ({ params }) => {
-    studios = studios.filter((s) => s.id !== Number(params.id));
-    return HttpResponse.json({ resCode: '10000', resMsg: '删除成功', data: null });
-  }),
-
-  /** 设置座位 */
-  http.put('/admin/api/studios/:id/seats', async ({ request, params }) => {
-    const body = (await request.json()) as { seatRows: string[] };
-    const studio = studios.find((s) => s.id === Number(params.id));
-    if (!studio) {
-      return HttpResponse.json({ resCode: '20004', resMsg: '数据不存在', data: null });
+    const id = Number(params.id);
+    const exists = studios.some((item) => item.id === id);
+    if (!exists) {
+      return fail('演出厅不存在', 404);
     }
-    // 同步更新演出厅的行列数
-    studio.rowCount = body.seatRows.length;
-    studio.colCount = body.seatRows[0]?.length ?? 0;
-    return HttpResponse.json({
-      resCode: '10000',
-      resMsg: '座位设置成功',
-      data: {
-        studioId: studio.id,
-        rowCount: studio.rowCount,
-        colCount: studio.colCount,
-        layout: body.seatRows,
-      },
-    });
+    studios = studios.filter((item) => item.id !== id);
+    return ok(null, '删除成功');
   }),
 ];

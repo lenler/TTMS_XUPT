@@ -1,68 +1,83 @@
-// 通用 CRUD Hook：列表加载、搜索、分页、刷新
+// 通用 CRUD Hook
 
-import { useState, useCallback, useEffect } from 'react';
-import { usePagination } from './usePagination';
-import type { PageParams } from '@/types/api';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ApiResponse, PageData, PageParams } from '@/types/api';
 
-/**
- * 列表请求函数类型
- * 注：Axios 响应拦截器已解包，运行时返回 ApiResponse<PageData<T>>，
- *     但 TS 类型系统无法感知拦截器转换，这里用宽松类型接受。
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FetchFn = (params: PageParams) => any;
+/** 通用 CRUD Hook 配置 */
+interface UseCRUDOptions<T> {
+  fetchList: (params: PageParams) => Promise<ApiResponse<PageData<T>>>;
+  initialPageSize?: number;
+}
 
-export function useCRUD<T>(fetchFn: FetchFn) {
+/** 提供分页、搜索、刷新和加载状态管理 */
+export function useCRUD<T>({ fetchList, initialPageSize = 10 }: UseCRUDOptions<T>) {
   const [list, setList] = useState<T[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(initialPageSize);
+  const [total, setTotal] = useState(0);
   const [keyword, setKeyword] = useState('');
-  const { page, pageSize, total, setPage, setPageSize, setTotal, resetPage } =
-    usePagination();
+  const paramsRef = useRef<PageParams>({ page: 1, pageSize: initialPageSize, keyword: '' });
 
-  /** 请求数据 */
-  const refresh = useCallback(
-    async (params?: { keyword?: string; page?: number }) => {
+  /** 按当前查询条件拉取分页数据 */
+  const loadData = useCallback(
+    async (nextParams?: Partial<PageParams>) => {
+      const params = {
+        ...paramsRef.current,
+        ...nextParams,
+      };
+      paramsRef.current = params;
+
       setLoading(true);
       try {
-        const kw = params?.keyword ?? keyword;
-        const pg = params?.page ?? page;
-        const res = await fetchFn({ keyword: kw, page: pg, pageSize });
+        const res = await fetchList(params);
         setList(res.data.list);
         setTotal(res.data.total);
-        setPage(pg);
-      } catch {
-        setList([]);
-        setTotal(0);
+        setPage(res.data.page);
+        setPageSize(res.data.pageSize);
       } finally {
         setLoading(false);
       }
     },
-    [fetchFn, keyword, page, pageSize, setPage, setTotal]
+    [fetchList]
   );
 
-  /** 首次加载 + keyword 变化时自动请求 */
-  useEffect(() => {
-    refresh({ keyword, page: 1 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyword]);
-
-  /** 搜索：重置到第 1 页 */
+  /** 根据关键字重新查询第一页数据 */
   const search = useCallback(
-    (kw: string) => {
-      setKeyword(kw);
-      resetPage();
+    (nextKeyword: string) => {
+      setKeyword(nextKeyword);
+      void loadData({ page: 1, keyword: nextKeyword });
     },
-    [resetPage]
+    [loadData]
   );
+
+  /** 切换分页后重新加载数据 */
+  const changePage = useCallback(
+    (nextPage: number, nextPageSize: number) => {
+      void loadData({ page: nextPage, pageSize: nextPageSize });
+    },
+    [loadData]
+  );
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [loadData]);
 
   return {
     list,
     loading,
-    pagination: { page, pageSize, total },
+    page,
+    pageSize,
+    total,
     keyword,
-    setKeyword: search,
-    setPage,
-    setPageSize,
-    refresh,
+    loadData,
+    search,
+    changePage,
   };
 }

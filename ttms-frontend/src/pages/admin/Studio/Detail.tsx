@@ -1,111 +1,85 @@
-// 演出厅新增/修改 Modal 表单
+// 演出厅详情页
 
+import { Button, Card, Descriptions, Empty, Skeleton, Space, Tag } from 'antd';
+import { ArrowLeftOutlined, EditOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
-import { Modal, Form, Input, InputNumber, message } from 'antd';
-import { createStudio, updateStudio } from '@/services/admin/studio';
-import SeatEditor from '@/components/admin/SeatEditor';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getStudioById } from '@/services/admin/studio';
 import type { Studio } from '@/types/models';
 
-interface StudioDetailModalProps {
-  open: boolean;
-  studio: Studio | null;  // null = 新增，非 null = 修改
-  onClose: () => void;
-  onSuccess: () => void;
-}
+/** 渲染演出厅详情信息，供后续座位管理功能扩展 */
+function StudioDetailPage() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [studio, setStudio] = useState<Studio | null>(null);
 
-interface StudioFormValues {
-  name: string;
-  rowCount: number;
-  colCount: number;
-  introduction: string;
-}
-
-function StudioDetailModal({ open, studio, onClose, onSuccess }: StudioDetailModalProps) {
-  const [form] = Form.useForm<StudioFormValues>();
-  const [saving, setSaving] = useState(false);
-  const isEdit = studio !== null;
-
-  /** 弹窗打开/studio 变化时回填表单 */
   useEffect(() => {
-    if (open) {
-      if (studio) {
-        form.setFieldsValue({
-          name: studio.name,
-          rowCount: studio.rowCount,
-          colCount: studio.colCount,
-          introduction: studio.introduction,
-        });
-      } else {
-        form.resetFields();
+    /** 根据路由编号加载演出厅详情 */
+    const loadStudio = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
       }
-    }
-  }, [open, studio, form]);
+      try {
+        const res = await getStudioById(Number(id));
+        setStudio(res.data);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  /** 提交 */
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      setSaving(true);
-      if (isEdit) {
-        await updateStudio(studio!.id, values);
-        message.success('修改成功');
-      } else {
-        await createStudio(values);
-        message.success('新增成功');
-      }
-      onSuccess();
-    } catch {
-      // 表单校验失败或接口报错
-    } finally {
-      setSaving(false);
-    }
-  };
+    void loadStudio();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Card title="演出厅详情">
+        <Skeleton active />
+      </Card>
+    );
+  }
+
+  if (!studio) {
+    return (
+      <Card title="演出厅详情">
+        <Empty description="未找到演出厅信息" />
+      </Card>
+    );
+  }
 
   return (
-    <Modal
-      title={isEdit ? '修改演出厅' : '新增演出厅'}
-      open={open}
-      onOk={handleSubmit}
-      onCancel={onClose}
-      confirmLoading={saving}
-      destroyOnClose
-      width={700}
+    <Card
+      title="演出厅详情"
+      extra={
+        <Space>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin/studio')}>
+            返回
+          </Button>
+          <Button type="primary" icon={<EditOutlined />} onClick={() => navigate('/admin/studio')}>
+            返回列表编辑
+          </Button>
+        </Space>
+      }
     >
-      <Form form={form} layout="vertical" initialValues={{ rowCount: 8, colCount: 10 }}>
-        <Form.Item
-          name="name"
-          label="演出厅名称"
-          rules={[{ required: true, message: '请输入名称' }]}
-        >
-          <Input placeholder="例：1号厅" />
-        </Form.Item>
-        <Form.Item
-          name="rowCount"
-          label="座位行数"
-          rules={[{ required: true, message: '请输入行数' }]}
-        >
-          <InputNumber min={1} max={30} style={{ width: '100%' }} />
-        </Form.Item>
-        <Form.Item
-          name="colCount"
-          label="座位列数"
-          rules={[{ required: true, message: '请输入列数' }]}
-        >
-          <InputNumber min={1} max={30} style={{ width: '100%' }} />
-        </Form.Item>
-        <Form.Item name="introduction" label="简介">
-          <Input.TextArea rows={3} placeholder="演出厅简介（选填）" />
-        </Form.Item>
-      </Form>
-
-      {/* 座位编辑器——仅修改模式显示 */}
-      {isEdit && (
-        <div style={{ marginTop: 16 }}>
-          <SeatEditor studioId={studio!.id} />
-        </div>
-      )}
-    </Modal>
+      <Descriptions
+        bordered
+        column={2}
+        items={[
+          { key: 'name', label: '演出厅名称', children: studio.name },
+          {
+            key: 'status',
+            label: '状态',
+            children: studio.status === 1 ? <Tag color="green">启用</Tag> : <Tag color="red">停用</Tag>,
+          },
+          { key: 'rowCount', label: '座位行数', children: studio.rowCount },
+          { key: 'colCount', label: '座位列数', children: studio.colCount },
+          { key: 'seatTotal', label: '座位总数', children: studio.rowCount * studio.colCount },
+          { key: 'introduction', label: '简介', children: studio.introduction },
+        ]}
+      />
+    </Card>
   );
 }
 
-export default StudioDetailModal;
+export default StudioDetailPage;
