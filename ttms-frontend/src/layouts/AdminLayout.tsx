@@ -81,8 +81,8 @@ function AdminLayout() {
   const { user, logout } = useAuthStore();
   const { token: themeToken } = theme.useToken();
 
-  // 根据当前路径计算选中的菜单项
-  const selectedKey = '/' + location.pathname.split('/').slice(0, 3).join('/');
+  // 根据当前路径计算选中的菜单项（取完整路径匹配）
+  const selectedKey = location.pathname;
   const openKeys = menuItems
     .filter((item) => 'children' in item)
     .map((item) => item.key);

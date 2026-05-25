@@ -49,7 +49,11 @@ function CustomerLayout() {
               <Link to="/orders" style={{ color: '#fff', marginRight: 16 }}>
                 <UserOutlined /> 我的订单
               </Link>
-              <Link to="/login" style={{ color: '#fff' }}>
+              <Link
+                to="/login"
+                style={{ color: '#fff' }}
+                onClick={() => localStorage.removeItem('customerToken')}
+              >
                 退出
               </Link>
             </>

@@ -1,7 +1,7 @@
 // 管理端登录页
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { adminLogin } from '@/services/admin/auth';
@@ -21,8 +21,7 @@ function AdminLoginPage() {
 
   // 已登录则直接跳转工作台
   if (localStorage.getItem('token')) {
-    navigate('/admin/dashboard', { replace: true });
-    return null;
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   const onFinish = async (values: LoginForm) => {
