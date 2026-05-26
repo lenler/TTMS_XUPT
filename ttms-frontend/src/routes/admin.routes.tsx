@@ -11,7 +11,6 @@ const StudioListPage = lazy(() => import('@/pages/admin/Studio/index'));
 // StudioDetail 改为 Modal，不在路由中独立使用
 const PlayListPage = lazy(() => import('@/pages/admin/Play/index'));
 const ScheduleListPage = lazy(() => import('@/pages/admin/Schedule/index'));
-const ScheduleDetailPage = lazy(() => import('@/pages/admin/Schedule/Detail'));
 const CheckListPage = lazy(() => import('@/pages/admin/Check/index'));
 const SaleListPage = lazy(() => import('@/pages/admin/Sale/index'));
 const RefundPage = lazy(() => import('@/pages/admin/Sale/Refund'));
@@ -40,7 +39,6 @@ const adminRoutes: RouteObject[] = [
           { path: 'studio', element: <StudioListPage /> },
           { path: 'play', element: <PlayListPage /> },
           { path: 'schedule', element: <ScheduleListPage /> },
-          { path: 'schedule/:id', element: <ScheduleDetailPage /> },
           { path: 'check', element: <CheckListPage /> },
           { path: 'sale', element: <SaleListPage /> },
           { path: 'sale/refund', element: <RefundPage /> },
