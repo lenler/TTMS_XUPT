@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ttms.studio.StudioRepository">
+
+    <resultMap id="StudioResultMap" type="com.ttms.studio.Studio">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="rowCount" column="row_count"/>
+        <result property="colCount" column="col_count"/>
+        <result property="introduction" column="introduction"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="StudioColumns">
+        id, name, row_count, col_count, introduction, status, created_at, updated_at
+    </sql>
+
+    <select id="countActive" resultType="long">
+        SELECT COUNT(*)
+        FROM studio
+        WHERE status = 1
+        <if test="keyword != null and keyword != ''">
+            AND (name LIKE CONCAT('%', #{keyword}, '%')
+            OR introduction LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+    </select>
+
+    <select id="selectActivePage" resultMap="StudioResultMap">
+        SELECT <include refid="StudioColumns"/>
+        FROM studio
+        WHERE status = 1
+        <if test="keyword != null and keyword != ''">
+            AND (name LIKE CONCAT('%', #{keyword}, '%')
+            OR introduction LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY id DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="selectById" resultMap="StudioResultMap">
+        SELECT <include refid="StudioColumns"/>
+        FROM studio
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.ttms.studio.Studio" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO studio (name, row_count, col_count, introduction, status)
+        VALUES (#{name}, #{rowCount}, #{colCount}, #{introduction}, #{status})
+    </insert>
+
+    <update id="update" parameterType="com.ttms.studio.Studio">
+        UPDATE studio
+        SET name = #{name},
+            row_count = #{rowCount},
+            col_count = #{colCount},
+            introduction = #{introduction}
+        WHERE id = #{id}
+          AND status = 1
+    </update>
+
+    <update id="disableById">
+        UPDATE studio
+        SET status = 0
+        WHERE id = #{id}
+          AND status = 1
+    </update>
+</mapper>
