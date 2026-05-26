@@ -1,5 +1,6 @@
 // 通用分页表格组件
 
+import React from 'react';
 import { Table, Button, Popconfirm, Space, Input } from "antd";
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
@@ -29,6 +30,8 @@ interface PageTableProps<T> {
   onPageChange: (page: number, pageSize: number) => void;
   /** 新增按钮文字 */
   addText?: string;
+  /** 自定义操作列渲染（覆盖默认的编辑/删除按钮） */
+  renderActions?: (record: T) => React.ReactNode;
 }
 
 function PageTable<T extends { id: number }>({
@@ -44,39 +47,44 @@ function PageTable<T extends { id: number }>({
   rowKey = "id",
   onPageChange,
   addText = "新增",
+  renderActions,
 }: PageTableProps<T>) {
   /** 构建完整表格列（含操作列） */
+  const hasActions = onEdit || onDelete || renderActions;
   const fullColumns: ColumnsType<T> = [
     ...columns,
-    ...(onEdit || onDelete
+    ...(hasActions
       ? [
           {
             title: "操作",
             key: "action",
-            width: 160,
-            render: (_: unknown, record: T) => (
-              <Space>
-                {onEdit && (
-                  <Button
-                    type="link"
-                    size="small"
-                    onClick={() => onEdit(record)}
-                  >
-                    编辑
-                  </Button>
-                )}
-                {onDelete && (
-                  <Popconfirm
-                    title="确定删除？"
-                    onConfirm={() => onDelete(record.id)}
-                  >
-                    <Button type="link" size="small" danger>
-                      删除
+            width: renderActions ? 180 : 160,
+            render: (_: unknown, record: T) =>
+              renderActions ? (
+                renderActions(record)
+              ) : (
+                <Space>
+                  {onEdit && (
+                    <Button
+                      type="link"
+                      size="small"
+                      onClick={() => onEdit(record)}
+                    >
+                      编辑
                     </Button>
-                  </Popconfirm>
-                )}
-              </Space>
-            ),
+                  )}
+                  {onDelete && (
+                    <Popconfirm
+                      title="确定删除？"
+                      onConfirm={() => onDelete(record.id)}
+                    >
+                      <Button type="link" size="small" danger>
+                        删除
+                      </Button>
+                    </Popconfirm>
+                  )}
+                </Space>
+              ),
           },
         ]
       : []),

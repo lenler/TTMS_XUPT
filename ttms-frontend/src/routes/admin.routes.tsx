@@ -15,7 +15,7 @@ const CheckListPage = lazy(() => import('@/pages/admin/Check/index'));
 const SaleListPage = lazy(() => import('@/pages/admin/Sale/index'));
 const RefundPage = lazy(() => import('@/pages/admin/Sale/Refund'));
 const EmployeeListPage = lazy(() => import('@/pages/admin/Employee/index'));
-const EmployeeDetailPage = lazy(() => import('@/pages/admin/Employee/Detail'));
+// EmployeeDetail 改为 Modal，不在路由中独立使用
 const CustomerListPage = lazy(() => import('@/pages/admin/Customer/index'));
 const RoleListPage = lazy(() => import('@/pages/admin/Role/index'));
 const RoleDetailPage = lazy(() => import('@/pages/admin/Role/Detail'));
@@ -43,7 +43,6 @@ const adminRoutes: RouteObject[] = [
           { path: 'sale', element: <SaleListPage /> },
           { path: 'sale/refund', element: <RefundPage /> },
           { path: 'employee', element: <EmployeeListPage /> },
-          { path: 'employee/:id', element: <EmployeeDetailPage /> },
           { path: 'customer', element: <CustomerListPage /> },
           { path: 'role', element: <RoleListPage /> },
           { path: 'role/:id', element: <RoleDetailPage /> },

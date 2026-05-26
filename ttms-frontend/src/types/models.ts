@@ -95,6 +95,18 @@ export interface Sale {
   items: SaleItem[];
 }
 
+/** 观众 */
+export interface Customer {
+  id: number;
+  name: string;
+  gender: number;
+  phone: string;
+  email: string;
+  username: string;
+  balance: number;
+  status: number;
+}
+
 /** 菜单项 */
 export interface MenuItem {
   name: string;
