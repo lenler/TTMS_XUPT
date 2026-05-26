@@ -1,1 +1,5 @@
-[]
+[
+  { "id": 1, "name": "王五", "gender": 1, "phone": "13600136000", "email": "wangwu@example.com", "username": "wangwu", "balance": 500.00, "status": 1 },
+  { "id": 2, "name": "赵六", "gender": 0, "phone": "13500135000", "email": "zhaoliu@example.com", "username": "zhaoliu", "balance": 200.00, "status": 1 },
+  { "id": 3, "name": "孙七", "gender": 1, "phone": "13400134000", "email": "sunqi@example.com", "username": "sunqi", "balance": 0.00, "status": 0 }
+]

@@ -1,1 +1,5 @@
-[]
+[
+  { "id": 1, "name": "1号厅", "rowCount": 7, "colCount": 7, "introduction": "小型演出厅，适合话剧", "status": 1 },
+  { "id": 2, "name": "2号厅", "rowCount": 10, "colCount": 12, "introduction": "中型演出厅，适合音乐会", "status": 1 },
+  { "id": 3, "name": "3号厅", "rowCount": 15, "colCount": 20, "introduction": "大型演出厅，适合大型歌舞剧", "status": 1 }
+]
