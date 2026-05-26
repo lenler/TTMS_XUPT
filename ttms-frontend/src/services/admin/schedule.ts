@@ -2,7 +2,7 @@
 
 import request from '../request';
 import type { ApiResponse, PageData, PageParams } from '@/types/api';
-import type { Schedule } from '@/types/models';
+import type { Schedule, Ticket } from '@/types/models';
 
 /** 演出计划列表查询参数 */
 interface ScheduleListParams extends PageParams {
@@ -41,4 +41,12 @@ export function updateSchedule(
 /** 删除演出计划 */
 export function deleteSchedule(id: number): Promise<ApiResponse<null>> {
   return request.delete(`/admin/api/schedules/${id}`);
+}
+
+/** 查询某场演出的票/座位状态 */
+export function getScheduleTickets(
+  id: number,
+  params?: { status?: number; page?: number; pageSize?: number }
+): Promise<ApiResponse<PageData<Ticket>>> {
+  return request.get(`/admin/api/schedules/${id}/tickets`, { params });
 }
