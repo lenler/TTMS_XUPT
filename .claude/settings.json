@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm dev *)",
+      "Bash(pnpm build *)",
+      "Bash(git --no-pager log --oneline -10)"
+    ]
+  }
+}
