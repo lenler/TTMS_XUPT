@@ -1,8 +1,8 @@
 // 通用分页表格组件
 
-import { Table, Button, Popconfirm, Space, Input } from 'antd';
-import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
-import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
+import { Table, Button, Popconfirm, Space, Input } from "antd";
+import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
+import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 
 interface PageTableProps<T> {
   /** 表格列配置 */
@@ -41,9 +41,9 @@ function PageTable<T extends { id: number }>({
   onAdd,
   onEdit,
   onDelete,
-  rowKey = 'id',
+  rowKey = "id",
   onPageChange,
-  addText = '新增',
+  addText = "新增",
 }: PageTableProps<T>) {
   /** 构建完整表格列（含操作列） */
   const fullColumns: ColumnsType<T> = [
@@ -51,8 +51,8 @@ function PageTable<T extends { id: number }>({
     ...(onEdit || onDelete
       ? [
           {
-            title: '操作',
-            key: 'action',
+            title: "操作",
+            key: "action",
             width: 160,
             render: (_: unknown, record: T) => (
               <Space>
@@ -98,8 +98,8 @@ function PageTable<T extends { id: number }>({
       <div
         style={{
           marginBottom: 16,
-          display: 'flex',
-          justifyContent: 'space-between',
+          display: "flex",
+          justifyContent: "space-between",
         }}
       >
         <Input
