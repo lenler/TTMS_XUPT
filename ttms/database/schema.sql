@@ -60,7 +60,7 @@ CREATE TABLE tickets (
   schedule_id BIGINT NOT NULL,
   price DECIMAL(10,2) NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'AVAILABLE',
-  locked_at DATETIME NULL,
+  lock_time DATETIME NULL,
   version BIGINT DEFAULT 0,
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL,

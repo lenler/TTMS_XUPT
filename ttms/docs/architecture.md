@@ -61,7 +61,7 @@ flowchart TD
 ## 关键一致性策略
 
 - 票据表 `tickets.version` 使用 JPA 乐观锁。
-- 下单时票据从 `AVAILABLE` 变为 `LOCKED`，并记录 `locked_at`。
+- 下单时票据从 `AVAILABLE` 变为 `LOCKED`，并记录 `lock_time`。
 - 支付确认时检查锁票状态和超时时间，再统一更新销售单、销售明细和票据状态。
 - 售票、支付、退票、生成票据等跨表操作全部放在 `@Transactional` 边界内。
 

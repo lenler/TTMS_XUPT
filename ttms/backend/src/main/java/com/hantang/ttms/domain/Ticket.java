@@ -27,7 +27,8 @@ public class Ticket extends BaseEntity {
     @Column(nullable = false, length = 20)
     private TicketStatus status = TicketStatus.AVAILABLE;
 
-    private LocalDateTime lockedAt;
+    @Column(name = "lock_time")
+    private LocalDateTime lockTime;
 
     @Version
     private Long version;
@@ -42,7 +43,7 @@ public class Ticket extends BaseEntity {
     public void setPrice(BigDecimal price) { this.price = price; }
     public TicketStatus getStatus() { return status; }
     public void setStatus(TicketStatus status) { this.status = status; }
-    public LocalDateTime getLockedAt() { return lockedAt; }
-    public void setLockedAt(LocalDateTime lockedAt) { this.lockedAt = lockedAt; }
+    public LocalDateTime getLockTime() { return lockTime; }
+    public void setLockTime(LocalDateTime lockTime) { this.lockTime = lockTime; }
     public Long getVersion() { return version; }
 }

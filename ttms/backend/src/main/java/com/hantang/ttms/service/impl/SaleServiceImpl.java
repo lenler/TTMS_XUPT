@@ -74,7 +74,7 @@ public class SaleServiceImpl implements SaleService {
                 throw new BusinessException("票据不可售或已被锁定");
             }
             ticket.setStatus(TicketStatus.LOCKED);
-            ticket.setLockedAt(LocalDateTime.now());
+            ticket.setLockTime(LocalDateTime.now());
 
             SaleItem item = new SaleItem();
             item.setSale(sale);
@@ -103,11 +103,11 @@ public class SaleServiceImpl implements SaleService {
         LocalDateTime expiredBefore = LocalDateTime.now().minusMinutes(lockTimeoutMinutes);
         for (SaleItem item : sale.getItems()) {
             Ticket ticket = item.getTicket();
-            if (ticket.getStatus() != TicketStatus.LOCKED || ticket.getLockedAt() == null || ticket.getLockedAt().isBefore(expiredBefore)) {
+            if (ticket.getStatus() != TicketStatus.LOCKED || ticket.getLockTime() == null || ticket.getLockTime().isBefore(expiredBefore)) {
                 throw new BusinessException("锁票已失效，请重新下单");
             }
             ticket.setStatus(TicketStatus.SOLD);
-            ticket.setLockedAt(null);
+            ticket.setLockTime(null);
             ticketRepository.save(ticket);
         }
         sale.setPaidAmount(paidAmount);
@@ -129,7 +129,7 @@ public class SaleServiceImpl implements SaleService {
                 throw new BusinessException("已验票不能退票");
             }
             ticket.setStatus(TicketStatus.REFUNDED);
-            ticket.setLockedAt(null);
+            ticket.setLockTime(null);
             ticketRepository.save(ticket);
         }
         sale.setStatus(SaleStatus.REFUNDED);
@@ -159,9 +159,9 @@ public class SaleServiceImpl implements SaleService {
     private void releaseExpiredLocks(List<Ticket> tickets) {
         LocalDateTime expiredBefore = LocalDateTime.now().minusMinutes(lockTimeoutMinutes);
         for (Ticket ticket : tickets) {
-            if (ticket.getStatus() == TicketStatus.LOCKED && ticket.getLockedAt() != null && ticket.getLockedAt().isBefore(expiredBefore)) {
+            if (ticket.getStatus() == TicketStatus.LOCKED && ticket.getLockTime() != null && ticket.getLockTime().isBefore(expiredBefore)) {
                 ticket.setStatus(TicketStatus.AVAILABLE);
-                ticket.setLockedAt(null);
+                ticket.setLockTime(null);
                 ticketRepository.save(ticket);
             }
         }

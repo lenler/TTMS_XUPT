@@ -13,5 +13,5 @@ public record TicketResponse(
     Integer colNo,
     BigDecimal price,
     TicketStatus status,
-    LocalDateTime lockedAt
+    LocalDateTime lockTime
 ) {}

@@ -18,7 +18,7 @@ public final class TicketMapper {
             ticket.getSeat().getColNo(),
             ticket.getPrice(),
             ticket.getStatus(),
-            ticket.getLockedAt()
+            ticket.getLockTime()
         );
     }
 
