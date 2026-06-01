@@ -1,23 +1,55 @@
 // 角色权限 API 服务
 
-export interface RoleItem {
+import request from '../request';
+import type { ApiResponse } from '@/types/api';
+
+/** 资源项 */
+export interface Resource {
+  id: number;
+  type: string;
+  name: string;
+  url: string;
+  parentName: string;
+}
+
+/** 角色 */
+export interface Role {
   id: number;
   name: string;
-  description: string;
-  permissions: string[];
+  resources: Resource[];
 }
 
-const roles: RoleItem[] = [
-  { id: 1, name: '系统管理员', description: '维护基础资料、用户和系统配置', permissions: ['剧院管理', '用户管理', '权限管理'] },
-  { id: 2, name: '售票员', description: '负责线下售票、退票和销售记录', permissions: ['售票记录', '退票处理'] },
-  { id: 3, name: '场务员', description: '负责现场验票和入场核验', permissions: ['验票管理'] },
-  { id: 4, name: '财务经理', description: '查看销售收入、票房和上座率', permissions: ['财务管理'] },
-];
-
-export async function getRoles(): Promise<RoleItem[]> {
-  return roles;
+/** 角色列表响应 */
+interface RoleListResult {
+  list: Role[];
 }
 
-export async function getRoleById(id: number): Promise<RoleItem | undefined> {
-  return roles.find((role) => role.id === id);
+/** 查询角色列表 */
+export function getRoles(): Promise<ApiResponse<RoleListResult>> {
+  return request.get('/admin/api/roles');
+}
+
+/** 新增角色 */
+export function createRole(data: { name: string; resourceIds: number[] }): Promise<ApiResponse<{ id: number }>> {
+  return request.post('/admin/api/roles', data);
+}
+
+/** 修改角色 */
+export function updateRole(id: number, data: { name: string; resourceIds: number[] }): Promise<ApiResponse<null>> {
+  return request.put(`/admin/api/roles/${id}`, data);
+}
+
+/** 删除角色 */
+export function deleteRole(id: number): Promise<ApiResponse<null>> {
+  return request.delete(`/admin/api/roles/${id}`);
+}
+
+/** 查询资源列表 */
+export function getResources(): Promise<ApiResponse<{ list: Resource[] }>> {
+  return request.get('/admin/api/resources');
+}
+
+/** 为用户分配角色 */
+export function assignEmployeeRoles(empId: number, roleIds: number[]): Promise<ApiResponse<null>> {
+  return request.put(`/admin/api/employees/${empId}/roles`, { roleIds });
 }
