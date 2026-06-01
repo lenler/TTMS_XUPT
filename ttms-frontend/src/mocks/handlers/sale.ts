@@ -27,6 +27,8 @@ interface Sale {
 }
 
 let sales: Sale[] = [];
+/** 销售记录（跨 handler 共享，供 finance 统计使用） */
+export { sales };
 let saleNextId = 20260001;
 let saleItemNextId = 1;
 
