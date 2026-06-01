@@ -46,8 +46,10 @@ public class Sale extends BaseEntity {
     public void setId(Long id) { this.id = id; }
     public Employee getEmployee() { return employee; }
     public void setEmployee(Employee employee) { this.employee = employee; }
+    public Long getEmployeeId() { return employee == null ? null : employee.getId(); }
     public Customer getCustomer() { return customer; }
     public void setCustomer(Customer customer) { this.customer = customer; }
+    public Long getCustomerId() { return customer == null ? null : customer.getId(); }
     public LocalDateTime getSaleTime() { return saleTime; }
     public void setSaleTime(LocalDateTime saleTime) { this.saleTime = saleTime; }
     public BigDecimal getPaidAmount() { return paidAmount; }

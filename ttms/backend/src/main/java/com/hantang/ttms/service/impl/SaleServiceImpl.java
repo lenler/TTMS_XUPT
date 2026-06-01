@@ -75,6 +75,7 @@ public class SaleServiceImpl implements SaleService {
             }
             ticket.setStatus(TicketStatus.LOCKED);
             ticket.setLockTime(LocalDateTime.now());
+            ticketRepository.save(ticket);
 
             SaleItem item = new SaleItem();
             item.setSale(sale);

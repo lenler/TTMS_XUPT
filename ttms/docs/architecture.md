@@ -6,7 +6,7 @@
 
 ## 技术栈
 
-- 后端：Spring Boot 3、Spring Web、Spring Data JPA、Spring Security、MySQL。
+- 后端：Spring Boot 3、Spring Web、MyBatis、Spring Security、MySQL。
 - 前端：Vue 3、Vite、Vue Router、Pinia、Axios、lucide-vue-next。
 - 数据库：MySQL 8，集中式关系数据存储。
 - 部署形态：浏览器前端访问 Tomcat/Spring Boot 服务端，服务端访问 MySQL。
@@ -20,7 +20,7 @@ ttms/
       controller/         REST 接口层
       service/            业务接口
       service/impl/       业务实现与事务边界
-      repository/         JPA 持久化接口
+      repository/         MyBatis Mapper 持久化接口
       domain/             领域实体
       dto/                请求 DTO
       common/             统一响应、异常
@@ -42,7 +42,7 @@ flowchart TD
   Browser["浏览器：管理端 / 售票端 / 观众端 / 验票端"]
   Controller["Controller：REST API"]
   Service["Service：业务规则、事务、冲突检测、锁票"]
-  Repository["Repository：JPA 数据访问"]
+  Repository["Repository：MyBatis 数据访问"]
   DB["MySQL：TTMS 数据库"]
 
   Browser --> Controller --> Service --> Repository --> DB
@@ -60,7 +60,7 @@ flowchart TD
 
 ## 关键一致性策略
 
-- 票据表 `tickets.version` 使用 JPA 乐观锁。
+- 票据表 `tickets.version` 保留版本字段，MyBatis 更新票据时显式递增。
 - 下单时票据从 `AVAILABLE` 变为 `LOCKED`，并记录 `lock_time`。
 - 支付确认时检查锁票状态和超时时间，再统一更新销售单、销售明细和票据状态。
 - 售票、支付、退票、生成票据等跨表操作全部放在 `@Transactional` 边界内。

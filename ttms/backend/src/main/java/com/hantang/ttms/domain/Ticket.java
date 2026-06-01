@@ -46,4 +46,5 @@ public class Ticket extends BaseEntity {
     public LocalDateTime getLockTime() { return lockTime; }
     public void setLockTime(LocalDateTime lockTime) { this.lockTime = lockTime; }
     public Long getVersion() { return version; }
+    public void setVersion(Long version) { this.version = version; }
 }

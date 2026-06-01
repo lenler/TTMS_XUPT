@@ -11,7 +11,7 @@
 | 层级 | 技术 |
 |------|------|
 | 后端框架 | Spring Boot 3 |
-| ORM | Spring Data JPA / Hibernate |
+| 持久层 | MyBatis 注解 Mapper |
 | 数据库 | MySQL，测试与本地联调可使用 H2 |
 | 构建工具 | Maven |
 | JDK | JDK 17 |
@@ -31,6 +31,7 @@
 重要约束：
 
 - `tickets(schedule_id, seat_id)` 必须唯一。
+- Repository 层已改为 MyBatis Mapper，保留原 Service 调用方法名以兼容现有业务代码。
 - 创建演出计划后自动按演出厅座位生成票。
 - 演出计划冲突检测按 `[showTime, showTime + play.durationMinutes)` 判断时间段重叠。
 - `DELETE /studios/{id}`、`DELETE /plays/{id}`、管理端兼容删除均为状态停用，不做物理删除。
