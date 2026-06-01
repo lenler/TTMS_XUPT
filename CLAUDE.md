@@ -2,6 +2,76 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ 当前工作分支
+
+**必须切换到 `fullstack` 分支进行联调工作**，该分支包含前端+后端全部最新代码。
+
+```bash
+git checkout fullstack
+```
+
+## 联调启动
+
+### 1. 启动后端（Spring Boot 3，端口 8080）
+
+```bash
+# 设置 Java 环境（Windows PowerShell）
+$env:JAVA_HOME='E:\develop\DevTools\Java\jdk-17'
+$env:MAVEN_HOME='E:\develop\DevTools\Maven\apache-maven-3.9.16'
+$env:Path="$env:JAVA_HOME\bin;$env:MAVEN_HOME\bin;$env:Path"
+
+# 编译并启动
+cd ttms/backend
+mvn spring-boot:run
+```
+
+后端默认使用 H2 内存数据库（自动建表 + 种子数据），无需本地 MySQL。
+
+### 2. 启动前端（React + Vite，端口 3000）
+
+```bash
+# 关闭 Mock，启用后端联调
+cd ttms/frontend
+$env:VITE_ENABLE_MOCK='false'
+pnpm dev -- --host 127.0.0.1
+```
+
+访问：`http://127.0.0.1:3000/`
+
+### 3. 测试账号
+
+| 类型 | 账号 | 密码 |
+|------|------|------|
+| 管理员 | `admin` | `123456` |
+| 观众 | `customer` | `123456` |
+
+### 4. 前端 Mock 模式
+
+如需脱离后端独立运行前端，设置 `VITE_ENABLE_MOCK=true`（默认值），MSW 将拦截所有 API 请求返回模拟数据。
+
+### 5. Vite 代理配置
+
+| 前端路径 | 代理目标 |
+|----------|---------|
+| `/admin/api` | `http://localhost:8080/api` |
+| `/public` | `http://localhost:8080/api` |
+| `/auth` | `http://localhost:8080/api` |
+| `/sales` | `http://localhost:8080/api` |
+| `/finance` | `http://localhost:8080/api` |
+
+## 联调验证清单
+
+- [ ] 后端 `mvn test` 通过
+- [ ] 后端 `mvn spring-boot:run` 启动成功（端口 8080）
+- [ ] 前端 `pnpm dev` 启动成功（端口 3000）
+- [ ] 管理端登录（`admin / 123456`）成功
+- [ ] 观众端浏览首页、选座、登录、下单链路通
+- [ ] 售票、验票、退票核心流程走通
+
+> 更多详情见 [`ttms/docs/project-completion.md`](ttms/docs/project-completion.md)
+
+---
+
 ## 智能体执行规范
 
 以下规则**所有智能体必须严格遵守**，不可违反。

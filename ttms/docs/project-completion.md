@@ -55,9 +55,9 @@ mvn spring-boot:run
 前端：
 
 ```powershell
-cd ttms-frontend
+cd ttms/frontend
 $env:VITE_ENABLE_MOCK='false'
-npm run dev -- --host 127.0.0.1
+pnpm dev -- --host 127.0.0.1
 ```
 
 访问地址：`http://127.0.0.1:3000/`
