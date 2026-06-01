@@ -1,9 +1,11 @@
 // 员工新增/修改 Modal 表单
 
 import { useEffect, useState } from 'react';
-import { Modal, Form, Input, Select, message } from 'antd';
+import { Modal, Form, Input, Select, Checkbox, Space, message } from 'antd';
 import { createEmployee, updateEmployee } from '@/services/admin/employee';
+import { getRoles, assignEmployeeRoles } from '@/services/admin/role';
 import type { Employee } from '@/types/models';
+import type { Role } from '@/services/admin/role';
 
 interface EmployeeDetailModalProps {
   open: boolean;
@@ -36,7 +38,16 @@ const positionOptions = [
 function EmployeeDetailModal({ open, employee, onClose, onSuccess }: EmployeeDetailModalProps) {
   const [form] = Form.useForm<EmployeeFormValues>();
   const [saving, setSaving] = useState(false);
+  const [roleList, setRoleList] = useState<Role[]>([]);
+  const [checkedRoleIds, setCheckedRoleIds] = useState<number[]>([]);
   const isEdit = employee !== null;
+
+  /** 加载角色列表 */
+  useEffect(() => {
+    getRoles()
+      .then((res) => setRoleList(res.data.list))
+      .catch(() => {});
+  }, []);
 
   /** 弹窗打开/employee 变化时回填表单 */
   useEffect(() => {
@@ -51,8 +62,18 @@ function EmployeeDetailModal({ open, employee, onClose, onSuccess }: EmployeeDet
           positionId: employee.positionId,
           password: undefined,
         });
+        // 加载该员工的已有角色（Mock 接口）
+        import('@/services/request')
+          .then(({ default: request }) =>
+            request.get(`/admin/api/employees/${employee.id}/roles`)
+          )
+          .then((res: any) => {
+            setCheckedRoleIds(res.data?.roleIds || []);
+          })
+          .catch(() => setCheckedRoleIds([]));
       } else {
         form.resetFields();
+        setCheckedRoleIds([]);
       }
     }
   }, [open, employee, form]);
@@ -64,9 +85,10 @@ function EmployeeDetailModal({ open, employee, onClose, onSuccess }: EmployeeDet
       setSaving(true);
       if (isEdit) {
         await updateEmployee(employee!.id, values);
+        // 分配角色
+        await assignEmployeeRoles(employee!.id, checkedRoleIds);
         message.success('修改成功');
       } else {
-        // 新增时密码已通过表单校验，必定存在
         await createEmployee(values as Required<EmployeeFormValues>);
         message.success('新增成功');
       }
@@ -153,6 +175,25 @@ function EmployeeDetailModal({ open, employee, onClose, onSuccess }: EmployeeDet
           <Input.Password placeholder={isEdit ? '留空则不修改密码' : '请输入密码'} />
         </Form.Item>
       </Form>
+
+      {/* 角色分配（仅修改模式显示） */}
+      {isEdit && roleList.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          <div style={{ fontWeight: 'bold', marginBottom: 8 }}>角色分配</div>
+          <Checkbox.Group
+            value={checkedRoleIds}
+            onChange={(vals) => setCheckedRoleIds(vals as number[])}
+          >
+            <Space wrap>
+              {roleList.map((role) => (
+                <Checkbox key={role.id} value={role.id}>
+                  {role.name}
+                </Checkbox>
+              ))}
+            </Space>
+          </Checkbox.Group>
+        </div>
+      )}
     </Modal>
   );
 }

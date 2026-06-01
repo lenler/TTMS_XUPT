@@ -1,6 +1,7 @@
 // 认证状态管理：token、用户信息、菜单
 
 import { create } from 'zustand';
+import { getCurrentUserMenus } from '@/services/admin/auth';
 
 interface User {
   id: number;
@@ -43,7 +44,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   fetchMenus: async () => {
-    // TODO: 后续对接真实接口
-    set({ menus: [] });
+    try {
+      const res = await getCurrentUserMenus();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      set({ menus: (res.data as any).menus || [] });
+    } catch {
+      set({ menus: [] });
+    }
   },
 }));

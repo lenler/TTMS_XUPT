@@ -18,7 +18,7 @@ const EmployeeListPage = lazy(() => import('@/pages/admin/Employee/index'));
 // EmployeeDetail 改为 Modal，不在路由中独立使用
 const CustomerListPage = lazy(() => import('@/pages/admin/Customer/index'));
 const RoleListPage = lazy(() => import('@/pages/admin/Role/index'));
-const RoleDetailPage = lazy(() => import('@/pages/admin/Role/Detail'));
+// RoleDetail 改为 Modal，不在路由中独立使用
 const FinancePage = lazy(() => import('@/pages/admin/Finance/index'));
 
 /** 管理端完整路由配置 */
@@ -45,7 +45,6 @@ const adminRoutes: RouteObject[] = [
           { path: 'employee', element: <EmployeeListPage /> },
           { path: 'customer', element: <CustomerListPage /> },
           { path: 'role', element: <RoleListPage /> },
-          { path: 'role/:id', element: <RoleDetailPage /> },
           { path: 'finance', element: <FinancePage /> },
         ],
       },

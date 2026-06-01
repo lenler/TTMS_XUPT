@@ -1,8 +1,9 @@
 // 管理端 SaaS 布局（侧边菜单 + 顶栏用户信息 + 内容区 + 退出）
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, Button, theme } from 'antd';
+import { Layout, Menu, Button, theme, Spin } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   HomeOutlined,
   BankOutlined,
@@ -23,73 +24,86 @@ import { useAuthStore } from '@/stores/authStore';
 
 const { Header, Sider, Content, Footer } = Layout;
 
-// 静态菜单配置（Mock 阶段使用，后续从接口加载）
-const menuItems = [
-  {
-    key: '/admin/dashboard',
-    icon: <HomeOutlined />,
-    label: '工作台',
-  },
-  {
-    key: 'theater',
-    icon: <BankOutlined />,
-    label: '剧院管理',
-    children: [
-      { key: '/admin/studio', icon: <TableOutlined />, label: '演出厅管理' },
-      { key: '/admin/play', icon: <VideoCameraOutlined />, label: '剧目管理' },
-      { key: '/admin/schedule', icon: <CalendarOutlined />, label: '演出计划' },
-      { key: '/admin/check', icon: <CheckCircleOutlined />, label: '验票管理' },
-    ],
-  },
-  {
-    key: 'ticket',
-    icon: <DollarOutlined />,
-    label: '票务管理',
-    children: [
-      { key: '/admin/sale', icon: <DollarOutlined />, label: '售票记录' },
-      { key: '/admin/sale/refund', icon: <DollarOutlined />, label: '退票处理' },
-    ],
-  },
-  {
-    key: 'user',
-    icon: <TeamOutlined />,
-    label: '用户管理',
-    children: [
-      { key: '/admin/employee', icon: <UserOutlined />, label: '员工管理' },
-      { key: '/admin/customer', icon: <TeamOutlined />, label: '观众管理' },
-    ],
-  },
-  {
-    key: 'perm',
-    icon: <SafetyCertificateOutlined />,
-    label: '权限管理',
-    children: [
-      { key: '/admin/role', icon: <SafetyCertificateOutlined />, label: '角色管理' },
-    ],
-  },
-  {
-    key: '/admin/finance',
-    icon: <BarChartOutlined />,
-    label: '财务管理',
-  },
-];
+/** 菜单名称 → 图标映射（从接口返回的菜单没有 icon，前端补上） */
+const iconMap: Record<string, React.ReactNode> = {
+  '工作台': <HomeOutlined />,
+  '剧院管理': <BankOutlined />,
+  '演出厅管理': <TableOutlined />,
+  '剧目管理': <VideoCameraOutlined />,
+  '演出计划': <CalendarOutlined />,
+  '验票管理': <CheckCircleOutlined />,
+  '票务管理': <DollarOutlined />,
+  '售票记录': <DollarOutlined />,
+  '退票处理': <DollarOutlined />,
+  '用户管理': <TeamOutlined />,
+  '员工管理': <UserOutlined />,
+  '观众管理': <TeamOutlined />,
+  '权限管理': <SafetyCertificateOutlined />,
+  '角色管理': <SafetyCertificateOutlined />,
+  '财务管理': <BarChartOutlined />,
+  '财务统计': <BarChartOutlined />,
+};
+
+/** 将 authStore 的 MenuItem 转为 antd Menu 的 items 格式 */
+function toAntdMenuItems(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  menus: any[]
+): MenuProps['items'] {
+  return menus.map((item) => {
+    if (item.children && item.children.length > 0) {
+      return {
+        key: item.name,
+        icon: iconMap[item.name] || null,
+        label: item.name,
+        children: item.children.map((child: { name: string; url?: string }) => ({
+          key: child.url || child.name,
+          icon: iconMap[child.name] || null,
+          label: child.name,
+        })),
+      };
+    }
+    return {
+      key: item.url || item.name,
+      icon: iconMap[item.name] || null,
+      label: item.name,
+    };
+  });
+}
 
 function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuthStore();
+  const { user, menus, logout, fetchMenus } = useAuthStore();
   const { token: themeToken } = theme.useToken();
 
-  // 根据当前路径计算选中的菜单项（/admin 映射到 /admin/dashboard）
+  /** 首次加载时获取菜单 */
+  useEffect(() => {
+    if (!menus) {
+      fetchMenus();
+    }
+  }, [menus, fetchMenus]);
+
+  /** 从接口菜单生成 antd menu items */
+  const antdMenuItems = useMemo(() => {
+    if (!menus || menus.length === 0) return [];
+    return toAntdMenuItems(menus) ?? [];
+  }, [menus]);
+
+  /** 根据当前路径计算选中的菜单项 */
   const selectedKey = location.pathname === '/admin'
     ? '/admin/dashboard'
     : location.pathname;
-  const openKeys = menuItems
-    .filter((item) => 'children' in item)
-    .map((item) => item.key);
 
-  const handleMenuClick = ({ key }: { key: string }) => {
+  /** 默认展开所有有子菜单的一级菜单 */
+  const openKeys = useMemo(() => {
+    if (!menus) return [];
+    return menus
+      .filter((item) => item.children && item.children.length > 0)
+      .map((item) => item.name);
+  }, [menus]);
+
+  const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     navigate(key);
   };
 
@@ -122,14 +136,20 @@ function AdminLayout() {
         >
           {collapsed ? 'TT' : 'TTMS'}
         </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          defaultOpenKeys={openKeys}
-          items={menuItems}
-          onClick={handleMenuClick}
-        />
+        {antdMenuItems.length > 0 ? (
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={[selectedKey]}
+            defaultOpenKeys={openKeys}
+            items={antdMenuItems}
+            onClick={handleMenuClick}
+          />
+        ) : (
+          <div style={{ textAlign: 'center', padding: 24 }}>
+            <Spin size="small" />
+          </div>
+        )}
       </Sider>
       <Layout>
         <Header
