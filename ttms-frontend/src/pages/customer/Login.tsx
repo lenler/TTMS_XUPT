@@ -1,35 +1,55 @@
 // 观众端登录页
 
-import { Button, Card, Form, Input, message } from 'antd';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Card, Form, Input, Button, Typography, message } from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { customerLogin } from '@/services/customer/auth';
 
+const { Title } = Typography;
+
+/** 观众端登录页 */
 function CustomerLoginPage() {
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const onFinish = async (values: { username: string; password: string }) => {
+    setLoading(true);
     try {
-      await customerLogin(values);
+      const res = await customerLogin(values);
+      localStorage.setItem('customerToken', res.data.token);
+      localStorage.setItem('customerInfo', JSON.stringify(res.data.customer));
       message.success('登录成功');
-      navigate('/');
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : '登录失败');
+      navigate('/', { replace: true });
+    } catch {
+      // 错误已在拦截器中提示
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Card title="观众登录" style={{ maxWidth: 420, margin: '40px auto' }}>
-      <Form layout="vertical" onFinish={onFinish}>
-        <Form.Item name="username" label="用户名" rules={[{ required: true }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item name="password" label="密码" rules={[{ required: true }]}>
-          <Input.Password />
-        </Form.Item>
-        <Button type="primary" htmlType="submit" block>登录</Button>
-      </Form>
-      <div style={{ marginTop: 12 }}>没有账号？<Link to="/register">立即注册</Link></div>
-    </Card>
+    <div style={{ maxWidth: 400, margin: '80px auto' }}>
+      <Card>
+        <Title level={3} style={{ textAlign: 'center', marginBottom: 24 }}>观众登录</Title>
+        <Form onFinish={onFinish} size="large">
+          <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
+            <Input prefix={<UserOutlined />} placeholder="用户名" />
+          </Form.Item>
+          <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
+            <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading} block>
+              登录
+            </Button>
+          </Form.Item>
+          <div style={{ textAlign: 'center' }}>
+            还没有账号？<Link to="/register">立即注册</Link>
+          </div>
+        </Form>
+      </Card>
+    </div>
   );
 }
 

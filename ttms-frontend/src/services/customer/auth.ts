@@ -1,35 +1,75 @@
-// 观众端认证 API 服务
+// 观众端认证 API 服务：登录 + 注册 + 个人信息
 
-import axios from 'axios';
+import request from '../request';
+import type { ApiResponse } from '@/types/api';
 
-export interface CustomerSession {
-  id: number;
+/** 登录请求 */
+interface CustomerLoginParams {
   username: string;
+  password: string;
+}
+
+/** 登录响应 */
+interface CustomerLoginResult {
+  token: string;
+  customer: {
+    id: number;
+    name: string;
+    username: string;
+    balance: number;
+  };
+}
+
+/** 注册请求 */
+interface CustomerRegisterParams {
   name: string;
+  gender: number;
+  phone: string;
+  email: string;
+  username: string;
+  password: string;
+  paymentPassword: string;
 }
 
-async function unwrap<T>(promise: Promise<{ data: { code: string; message: string; data: T } }>) {
-  const res = await promise;
-  if (res.data.code !== '10000') {
-    throw new Error(res.data.message);
-  }
-  return res.data.data;
+/** 个人信息 */
+interface CustomerProfile {
+  id: number;
+  name: string;
+  gender: number;
+  phone: string;
+  email: string;
+  username: string;
+  balance: number;
+  status: number;
 }
 
-export async function customerLogin(data: { username: string; password: string }) {
-  const auth = await unwrap<{ id: number; username: string; name: string }>(
-    axios.post('/auth/login', { ...data, userType: 'customer' })
-  );
-  const session: CustomerSession = { id: auth.id, username: auth.username, name: auth.name };
-  localStorage.setItem('customerToken', `customer-${auth.id}`);
-  localStorage.setItem('customer', JSON.stringify(session));
-  return session;
+/** 修改密码请求 */
+interface ChangePasswordParams {
+  oldPassword: string;
+  newPassword: string;
 }
 
-export async function customerRegister(data: { username: string; password: string; name: string; phone?: string; email?: string }) {
-  return unwrap<CustomerSession>(axios.post('/auth/customers/register', data));
+/** 观众登录 */
+export function customerLogin(data: CustomerLoginParams): Promise<ApiResponse<CustomerLoginResult>> {
+  return request.post('/customer/api/login', data);
 }
 
-export function getCustomerSession(): CustomerSession | null {
-  return JSON.parse(localStorage.getItem('customer') || 'null');
+/** 观众注册 */
+export function customerRegister(data: CustomerRegisterParams): Promise<ApiResponse<{ id: number }>> {
+  return request.post('/customer/api/register', data);
+}
+
+/** 获取个人信息 */
+export function getProfile(): Promise<ApiResponse<CustomerProfile>> {
+  return request.get('/customer/api/profile');
+}
+
+/** 修改个人信息 */
+export function updateProfile(data: Partial<CustomerProfile>): Promise<ApiResponse<null>> {
+  return request.put('/customer/api/profile', data);
+}
+
+/** 修改密码 */
+export function changePassword(data: ChangePasswordParams): Promise<ApiResponse<null>> {
+  return request.put('/customer/api/profile/password', data);
 }

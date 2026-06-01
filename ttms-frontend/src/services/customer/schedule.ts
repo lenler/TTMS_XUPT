@@ -1,28 +1,62 @@
 // 观众端排片 API 服务
 
-import axios from 'axios';
-import type { Play, Schedule, Ticket } from '@/types/models';
+import request from '../request';
+import type { ApiResponse, PageData, PageParams } from '@/types/api';
 
-async function unwrap<T>(promise: Promise<{ data: { code?: string; resCode?: string; message?: string; resMsg?: string; data: T } }>) {
-  const res = await promise;
-  const code = res.data.code ?? res.data.resCode;
-  if (code !== '10000') {
-    throw new Error(res.data.message ?? res.data.resMsg ?? '请求失败');
-  }
-  return res.data.data;
+/** 放映列表项 */
+interface ScheduleItem {
+  id: number;
+  playId: number;
+  playName: string;
+  playPoster: string;
+  playType: string;
+  playDuration: number;
+  studioId: number;
+  studioName: string;
+  showTime: string;
+  ticketPrice: number;
+  availableSeats: number;
 }
 
-export function getPublicPlays(params?: { name?: string }) {
-  return unwrap<Play[]>(axios.get('/public/plays', { params }));
+/** 座位（观众端视角） */
+interface ScheduleSeat {
+  id: number;
+  row: number;
+  col: number;
+  status: number; // 0=available, 1=locked, 2=sold
 }
 
-export function getPublicSchedules(params?: { playId?: number }) {
-  return unwrap<Schedule[]>(axios.get('/public/schedules', { params }));
+/** 演出详情 */
+interface ScheduleDetail {
+  id: number;
+  play: {
+    id: number;
+    name: string;
+    poster: string;
+    typeName: string;
+    langName: string;
+    introduction: string;
+    duration: number;
+  };
+  studio: {
+    id: number;
+    name: string;
+    introduction: string;
+  };
+  showTime: string;
+  ticketPrice: number;
+  seats: ScheduleSeat[];
+  seatLayout: string[];
 }
 
-export async function getScheduleTickets(scheduleId: number) {
-  const page = await unwrap<{ list: Ticket[] }>(
-    axios.get(`/admin/api/schedules/${scheduleId}/tickets`, { params: { pageSize: 1000 } })
-  );
-  return page.list;
+/** 查询放映安排列表 */
+export function getSchedules(
+  params: PageParams & { playId?: number; date?: string }
+): Promise<ApiResponse<PageData<ScheduleItem>>> {
+  return request.get('/customer/api/schedules', { params });
+}
+
+/** 查询演出详情（含座位） */
+export function getScheduleById(id: number): Promise<ApiResponse<ScheduleDetail>> {
+  return request.get(`/customer/api/schedules/${id}`);
 }

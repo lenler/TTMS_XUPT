@@ -1,16 +1,23 @@
 // 观众端榜单 API 服务
 
-import { getPublicSchedules } from './schedule';
+import request from '../request';
+import type { ApiResponse } from '@/types/api';
 
-export async function getBoxOfficeBoard() {
-  const schedules = await getPublicSchedules();
-  return schedules
-    .map((schedule) => ({
-      id: schedule.id,
-      playName: schedule.playName,
-      studioName: schedule.studioName,
-      showTime: schedule.showTime,
-      ticketPrice: schedule.ticketPrice,
-    }))
-    .sort((a, b) => a.playName.localeCompare(b.playName));
+/** 榜单项 */
+interface BoardItem {
+  rank: number;
+  playId: number;
+  playName: string;
+  poster: string;
+  sales: number;
+}
+
+/** 榜单数据 */
+interface BoardData {
+  list: BoardItem[];
+}
+
+/** 获取票房榜单 */
+export function getBoard(params?: { type?: string; limit?: number }): Promise<ApiResponse<BoardData>> {
+  return request.get('/customer/api/board', { params });
 }

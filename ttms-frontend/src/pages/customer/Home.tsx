@@ -1,48 +1,118 @@
-// 观众端首页
+// 观众端首页：热卖剧目 + 近期演出
 
 import { useEffect, useState } from 'react';
-import { Button, Card, Col, Row, Typography } from 'antd';
-import { Link } from 'react-router-dom';
-import { getHomeData } from '@/services/customer/home';
-import type { Play, Schedule } from '@/types/models';
+import { useNavigate } from 'react-router-dom';
+import { Card, Row, Col, Typography, Spin, Empty, Tag, Button } from 'antd';
+import { FireOutlined, ClockCircleOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import { getHome } from '@/services/customer/home';
 
-const { Title, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
+interface HotPlay {
+  id: number; name: string; poster: string; typeName: string;
+  duration: number; basePrice: number; soldCount: number;
+}
+
+interface UpcomingSchedule {
+  id: number; playId: number; playName: string; studioName: string;
+  showTime: string; ticketPrice: number; availableSeats: number;
+}
+
+/** 观众端首页 */
 function HomePage() {
-  const [plays, setPlays] = useState<Play[]>([]);
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [hotPlays, setHotPlays] = useState<HotPlay[]>([]);
+  const [upcoming, setUpcoming] = useState<UpcomingSchedule[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    getHomeData().then((data) => {
-      setPlays(data.plays);
-      setSchedules(data.schedules);
-    }).catch(() => {});
+    setLoading(true);
+    getHome()
+      .then((res) => {
+        setHotPlays(res.data.hotPlays);
+        setUpcoming(res.data.upcomingSchedules);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   return (
-    <div>
-      <Title level={2}>汉唐剧院</Title>
-      <Paragraph>在线浏览剧目、选择场次并完成订票。</Paragraph>
-      <Row gutter={[16, 16]}>
-        {plays.map((play) => (
-          <Col xs={24} md={8} key={play.id}>
-            <Card title={play.name} extra={<Link to="/schedule">排片</Link>}>
-              <Paragraph ellipsis={{ rows: 3 }}>{play.introduction || '暂无简介'}</Paragraph>
-              <div>类型：{play.typeName || play.typeId || '-'}</div>
-              <div>时长：{play.duration || 0} 分钟</div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-      <Card title="近期排片" style={{ marginTop: 16 }} extra={<Button type="link"><Link to="/schedule">全部排片</Link></Button>}>
-        {schedules.map((item) => (
-          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}>
-            <span>{item.playName} / {item.studioName} / {item.showTime}</span>
-            <Link to={`/seats/${item.id}`}>选座</Link>
-          </div>
-        ))}
-      </Card>
-    </div>
+    <Spin spinning={loading}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        {/* 热卖剧目 */}
+        <Title level={3} style={{ marginBottom: 16 }}>
+          <FireOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />热卖剧目
+        </Title>
+        {hotPlays.length === 0 && !loading && <Empty description="暂无剧目" />}
+        <Row gutter={[16, 16]} style={{ marginBottom: 40 }}>
+          {hotPlays.map((play) => (
+            <Col key={play.id} xs={24} sm={12} md={6}>
+              <Card
+                hoverable
+                cover={
+                  <div style={{ height: 200, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text type="secondary" style={{ fontSize: 48 }}>🎭</Text>
+                  </div>
+                }
+                onClick={() => navigate('/schedule')}
+              >
+                <Card.Meta
+                  title={play.name}
+                  description={
+                    <>
+                      <Tag color="blue">{play.typeName}</Tag>
+                      <Tag>{play.duration}分钟</Tag>
+                      <div style={{ marginTop: 8 }}>
+                        <Text type="secondary">基础票价：</Text>
+                        <Text strong>¥{play.basePrice.toFixed(2)}</Text>
+                      </div>
+                      <div>
+                        <Text type="secondary">已售：</Text>
+                        <Text style={{ color: '#ff4d4f' }}>{play.soldCount} 张</Text>
+                      </div>
+                    </>
+                  }
+                />
+              </Card>
+            </Col>
+          ))}
+        </Row>
+
+        {/* 近期演出 */}
+        <Title level={3} style={{ marginBottom: 16 }}>
+          <ClockCircleOutlined style={{ marginRight: 8 }} />近期演出
+        </Title>
+        {upcoming.length === 0 && !loading && <Empty description="暂无近期演出" />}
+        <Row gutter={[16, 16]}>
+          {upcoming.map((item) => (
+            <Col key={item.id} xs={24} sm={12} md={8}>
+              <Card hoverable onClick={() => navigate(`/seats/${item.id}`)}>
+                <Title level={5} style={{ marginBottom: 8 }}>{item.playName}</Title>
+                <div style={{ marginBottom: 4 }}>
+                  <EnvironmentOutlined /> <Text>{item.studioName}</Text>
+                </div>
+                <div style={{ marginBottom: 4 }}>
+                  <ClockCircleOutlined /> <Text>{item.showTime}</Text>
+                </div>
+                <div style={{ marginBottom: 4 }}>
+                  <Text type="secondary">票价：</Text>
+                  <Text strong style={{ color: '#ff4d4f' }}>¥{item.ticketPrice.toFixed(2)}</Text>
+                </div>
+                <div>
+                  <Text type="secondary">剩余座位：</Text>
+                  <Text style={{ color: item.availableSeats > 0 ? '#52c41a' : '#ff4d4f' }}>
+                    {item.availableSeats} 座
+                  </Text>
+                </div>
+                <Button type="primary" style={{ marginTop: 12 }} block>
+                  立即购票
+                </Button>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </div>
+    </Spin>
   );
 }
 
