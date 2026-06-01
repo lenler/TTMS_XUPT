@@ -29,12 +29,17 @@ request.interceptors.response.use(
     return response.data;           // 只返回 { resCode, resMsg, data }
   },
   (error) => {
+    const serverMessage =
+      error.response?.data?.resMsg ||
+      error.response?.data?.message ||
+      error.message ||
+      '网络请求失败';
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     }
-    message.error('网络请求失败');
-    return Promise.reject(error);
+    message.error(serverMessage);
+    return Promise.reject(new Error(serverMessage));
   }
 );
 
