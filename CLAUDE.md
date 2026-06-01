@@ -28,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 设计参考规范
 
-- **所有开发和设计工作，必须在开工前阅读 [`doc/TTMS软件设计与需求分析.md`](doc/TTMS软件设计与需求分析.md)**
+- **所有开发和设计工作，必须在开工前阅读 [`ttms/docs/TTMS软件设计与需求分析.md`](ttms/docs/TTMS软件设计与需求分析.md)**
 - 任何代码实现、接口定义、数据库设计、页面开发都必须以该文档为依据
 - 具体的开发细节必须依照各自的模块设计文档, 如(前端设计文档、后端设计文档、数据库设计文档等)
 - **开发时必须按照设计文档中的顺序与规定执行**，不得跳过或打乱开发阶段
@@ -58,23 +58,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 设计文档
 
-**首要参考**：[`doc/TTMS软件设计与需求分析.md`](doc/TTMS软件设计与需求分析.md) —— 整合了需求分析、软件设计、数据模型、接口设计、物理架构等全部关键信息，所有开发工作以此为准。
+**首要参考**：[`ttms/docs/TTMS软件设计与需求分析.md`](ttms/docs/TTMS软件设计与需求分析.md) —— 整合了需求分析、软件设计、数据模型、接口设计、物理架构等全部关键信息，所有开发工作以此为准。
 
 其他补充文档：
 
 | 文件 | 说明 |
 | ---- | ---- |
-| `TTMS---需求分析.pdf` | 原始需求分析 PDF（图片类型，不可直接提取文字） |
-| `TTMS---软件设计(BS).pdf` | 原始软件设计 PDF（图片类型） |
-| `UML--活动图.pdf` | UML 活动图（图片类型） |
+| `ttms/docs/TTMS---需求分析.pdf` | 原始需求分析 PDF（图片类型，不可直接提取文字） |
+| `ttms/docs/TTMS---软件设计(BS).pdf` | 原始软件设计 PDF（图片类型） |
+| `ttms/docs/前端设计文档.md` | 前端工程化设计文档 |
+| `ttms/docs/接口设计文档.md` | 前后端 REST API 接口契约 |
+| `ttms/docs/服务端设计文档.md` | 后端分层设计文档 |
+| `ttms/docs/开发日志/` | 前端、后端、文档开发日志 |
 
 ## 技术栈
 
 | 类别 | 技术 |
 | ------ | ------ |
-| 前端 | React 19 + TypeScript + Redux Toolkit + React Router + Axios + Ant Design + Vite + ECharts + Mock.js |
-| 后端 | 待定（后续补充） |
-| 数据库 | MySQL 5 |
+| 前端 | React 19 + TypeScript + Zustand + React Router + Axios + Ant Design + Vite + MSW |
+| 后端 | Spring Boot 3 + MyBatis + Maven |
+| 数据库 | MySQL 5（测试用 H2） |
 | 建模 | 面向对象 + UML |
 
 ## 开发模式
@@ -82,6 +85,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 采用**前后端分离 + Mock 驱动开发**模式：
 
 - **接口文档**是前后端的共同契约，双方各自参考同一份接口规范
-- **前端**：使用 Mock.js 模拟接口响应，不依赖后端，独立开发与调试
+- **前端**：使用 MSW（Mock Service Worker）模拟接口响应，不依赖后端，独立开发与调试
 - **后端**：参考接口文档开发真实接口，确保与 Mock 数据格式一致
 - 前后端可并行开发，互不阻塞
+
+## 项目结构
+
+```
+ttms/
+├── frontend/          # React 19 前端（管理端 + 观众端）
+│   └── src/
+│       ├── pages/     # 页面组件（admin/ + customer/）
+│       ├── services/  # API 服务层
+│       ├── mocks/     # MSW Mock 数据与处理器
+│       ├── stores/    # Zustand 状态管理
+│       └── types/     # TypeScript 类型定义
+├── backend/           # Spring Boot 3 后端
+│   └── src/main/java/com/hantang/ttms/
+│       ├── controller/  # REST 控制器 + 前端兼容控制器
+│       ├── service/     # 业务逻辑层
+│       ├── repository/  # MyBatis Mapper
+│       └── domain/      # 实体类
+├── database/          # MySQL 建表与种子数据
+└── docs/              # 全部设计文档与开发日志
+```
