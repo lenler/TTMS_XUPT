@@ -1,0 +1,20 @@
+# Local archives
+archives/
+*.zip
+
+# Frontend generated files
+ttms-frontend/node_modules/
+ttms-frontend/dist/
+ttms-frontend/*.log
+ttms-frontend/.env
+ttms-frontend/.env.*
+
+# Backend generated files
+ttms/backend/target/
+ttms/frontend/node_modules/
+ttms/frontend/dist/
+
+# Local runtime files
+*.log
+.env
+.env.*

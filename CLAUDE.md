@@ -28,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 设计参考规范
 
-- **所有开发和设计工作，必须在开工前阅读 [`doc/TTMS软件设计与需求分析.md`](doc/TTMS软件设计与需求分析.md)**
+- **所有开发和设计工作，必须在开工前阅读 [`project-docs/reference/TTMS软件设计与需求分析.md`](project-docs/reference/TTMS软件设计与需求分析.md)**
 - 任何代码实现、接口定义、数据库设计、页面开发都必须以该文档为依据
 - 具体的开发细节必须依照各自的模块设计文档, 如(前端设计文档、后端设计文档、数据库设计文档等)
 - **开发时必须按照设计文档中的顺序与规定执行**，不得跳过或打乱开发阶段
@@ -58,7 +58,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 设计文档
 
-**首要参考**：[`doc/TTMS软件设计与需求分析.md`](doc/TTMS软件设计与需求分析.md) —— 整合了需求分析、软件设计、数据模型、接口设计、物理架构等全部关键信息，所有开发工作以此为准。
+**首要参考**：[`project-docs/reference/TTMS软件设计与需求分析.md`](project-docs/reference/TTMS软件设计与需求分析.md) —— 整合了需求分析、软件设计、数据模型、接口设计、物理架构等全部关键信息，所有开发工作以此为准。
 
 其他补充文档：
 
