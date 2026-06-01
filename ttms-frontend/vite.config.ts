@@ -17,6 +17,22 @@ export default defineConfig({
         target: 'http://localhost:8080/api',
         changeOrigin: true,
       },
+      '/public': {
+        target: 'http://localhost:8080/api',
+        changeOrigin: true,
+      },
+      '/auth': {
+        target: 'http://localhost:8080/api',
+        changeOrigin: true,
+      },
+      '/sales': {
+        target: 'http://localhost:8080/api',
+        changeOrigin: true,
+      },
+      '/finance': {
+        target: 'http://localhost:8080/api',
+        changeOrigin: true,
+      },
     },
   },
 })
