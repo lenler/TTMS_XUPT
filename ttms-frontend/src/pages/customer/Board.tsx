@@ -1,4 +1,5 @@
-// 票房榜单页
+// 票房榜单页 —— 水墨留白 · 东方极简
+// 排名列表 + 前三名暗金标识
 
 import { useEffect, useState } from 'react';
 import { Table, Typography, Spin, Empty } from 'antd';
@@ -6,15 +7,19 @@ import { TrophyOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { getBoard } from '@/services/customer/board';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface BoardItem {
   rank: number; playId: number; playName: string;
   poster: string; sales: number;
 }
 
-/** 排名颜色 */
-const rankColors: Record<number, string> = { 1: '#ff4d4f', 2: '#fa8c16', 3: '#fadb14' };
+/** 排名颜色：前三名暗金渐变色 */
+const rankConfig: Record<number, { color: string; bg: string }> = {
+  1: { color: '#C9A96E', bg: '#FBF6EE' },
+  2: { color: '#B8944F', bg: '#FBF6EE' },
+  3: { color: '#A8813A', bg: '#FAF5EC' },
+};
 
 /** 票房榜单页 */
 function BoardPage() {
@@ -34,29 +39,53 @@ function BoardPage() {
       title: '排名', dataIndex: 'rank', key: 'rank', width: 80,
       render: (rank: number) => {
         if (rank <= 3) {
-          return <TrophyOutlined style={{ color: rankColors[rank], fontSize: 20 }} />;
+          return (
+            <span className="inline-flex items-center justify-center w-8 h-8">
+              <TrophyOutlined className="text-xl" style={{ color: rankConfig[rank].color }} />
+            </span>
+          );
         }
-        return <Text strong>{rank}</Text>;
+        return <Text className="!text-stone font-medium">{rank}</Text>;
       },
     },
-    { title: '剧目', dataIndex: 'playName', key: 'playName' },
+    {
+      title: '剧目', dataIndex: 'playName', key: 'playName',
+      render: (name: string, record: BoardItem) => (
+        <span className={record.rank <= 3 ? 'font-medium' : ''}>{name}</span>
+      ),
+    },
     {
       title: '销售额', dataIndex: 'sales', key: 'sales',
-      render: (v: number) => <Text strong style={{ color: '#ff4d4f' }}>¥{v.toFixed(2)}</Text>,
-      sorter: (a, b) => a.sales - b.sales,
+      render: (v: number) => (
+        <Text className="!text-ink font-medium">¥{v.toFixed(2)}</Text>
+      ),
+      sorter: (a: BoardItem, b: BoardItem) => a.sales - b.sales,
     },
   ];
 
+  /** 行样式：前三名暗金背景 */
+  const rowClassName = (record: BoardItem) => {
+    if (record.rank <= 3) return 'board-top-row';
+    return '';
+  };
+
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto' }}>
-      <Title level={3} style={{ marginBottom: 24 }}>
-        <TrophyOutlined style={{ color: '#fa8c16', marginRight: 8 }} />票房榜单
-      </Title>
+    <div>
+      <h1 className="font-serif text-2xl text-ink tracking-wide mb-6 flex items-center gap-2">
+        <TrophyOutlined className="text-gold" />
+        票房榜单
+      </h1>
       <Spin spinning={loading}>
         {data.length === 0 && !loading ? (
           <Empty description="暂无数据" />
         ) : (
-          <Table rowKey="playId" columns={columns} dataSource={data} pagination={false} />
+          <Table
+            rowKey="playId"
+            columns={columns}
+            dataSource={data}
+            pagination={false}
+            rowClassName={rowClassName}
+          />
         )}
       </Spin>
     </div>

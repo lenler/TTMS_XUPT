@@ -1,0 +1,73 @@
+/* 全局样式 —— 水墨留白 · 东方极简 */
+
+@import "tailwindcss";
+
+/* ===== 自定义主题 ===== */
+@theme {
+  /* 配色系统 */
+  --color-ink: #2c2c2c;
+  --color-stone: #666666;
+  --color-light-ink: #999999;
+  --color-rice: #FAFAF7;
+  --color-cream: #F5F0EB;
+  --color-warm: #E8E0D5;
+  --color-gold: #C9A96E;
+
+  /* 字体 */
+  --font-serif: "Noto Serif SC", Georgia, "Songti SC", serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* 圆角 */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+
+  /* 间距扩展 */
+  --spacing-section: 3rem;
+}
+
+/* ===== 基础层级样式 ===== */
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-rice);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 衬线字体用于标题 */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    letter-spacing: 0.05em;
+  }
+
+  /* 链接基础样式 */
+  a {
+    color: var(--color-ink);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  a:hover {
+    color: var(--color-gold);
+  }
+}
+
+/* ===== 动画工具类 ===== */
+@utility transition-soft {
+  transition: all 0.2s ease;
+}
+
+/* ===== 滚动条美化 ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-warm);
+  border-radius: 3px;
+}

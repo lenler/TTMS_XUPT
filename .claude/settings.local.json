@@ -11,7 +11,13 @@
       "Bash(git --no-pager log --oneline -9)",
       "Bash(git --no-pager show 1901aab --stat)",
       "Bash(git --no-pager show bcb2a45 --stat)",
-      "Bash(git --no-pager log --oneline --all)"
+      "Bash(git --no-pager log --oneline --all)",
+      "Bash(dir \"D:\\\\myproject\\\\TTMS\\\\TTMS_XUPT\\\\ttms-frontend\\\\src\\\\theme\" 2>NUL || echo \"theme directory is empty or does not exist\")",
+      "Bash(pnpm add *)",
+      "Bash(pnpm run *)"
+    ],
+    "additionalDirectories": [
+      "D:\\myproject\\TTMS\\TTMS_XUPT"
     ]
   }
 }

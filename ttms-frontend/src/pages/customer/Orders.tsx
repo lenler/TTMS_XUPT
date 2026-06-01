@@ -1,11 +1,12 @@
-// 我的订单页：订单列表 + 退票
+// 我的订单页 —— 水墨留白 · 东方极简
+// 细线表格 + 退票弹窗
 
 import { useEffect, useState, useCallback } from 'react';
 import { Typography, Table, Tag, Button, Modal, Checkbox, message, Spin, Empty } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { getMyOrders, getOrder, refundOrder } from '@/services/customer/order';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface OrderItem {
   orderId: number; playName: string; poster: string;
@@ -18,11 +19,11 @@ interface RefundTicketInfo {
   ticketId: number; seatRow: number; seatCol: number; price: number; ticketStatus: string;
 }
 
-/** 状态映射 */
+/** 状态映射 —— 水墨色系 */
 const statusMap: Record<string, { color: string; label: string }> = {
   unpaid: { color: 'default', label: '待支付' },
   paid: { color: 'green', label: '已支付' },
-  refunding: { color: 'orange', label: '退票中' },
+  refunding: { color: 'gold', label: '退票中' },
   refunded: { color: 'red', label: '已退票' },
   cancelled: { color: 'default', label: '已取消' },
 };
@@ -50,7 +51,7 @@ function OrdersPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  /** 打开退票弹窗 —— 拉取订单详情获取真实票列表 */
+  /** 打开退票弹窗 */
   const openRefundModal = async (orderId: number) => {
     setRefundModal({ open: true, orderId });
     setSelectedTicketIds([]);
@@ -58,7 +59,7 @@ function OrdersPage() {
     setLoadingTickets(true);
     try {
       const res = await getOrder(orderId);
-      setRefundTickets(res.data.tickets.filter((t) => t.ticketStatus === 'sold'));
+      setRefundTickets(res.data.tickets.filter((t: RefundTicketInfo) => t.ticketStatus === 'sold'));
     } catch { /* 错误已提示 */ }
     finally { setLoadingTickets(false); }
   };
@@ -91,7 +92,7 @@ function OrdersPage() {
     { title: '票数', dataIndex: 'ticketCount', key: 'ticketCount' },
     {
       title: '金额', dataIndex: 'totalPrice', key: 'totalPrice',
-      render: (v: number) => <Text style={{ color: '#ff4d4f' }}>¥{v.toFixed(2)}</Text>,
+      render: (v: number) => <Text className="!text-ink font-medium">¥{v.toFixed(2)}</Text>,
     },
     {
       title: '状态', dataIndex: 'status', key: 'status',
@@ -114,8 +115,8 @@ function OrdersPage() {
   ];
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-      <Title level={3} style={{ marginBottom: 24 }}>我的订单</Title>
+    <div>
+      <h1 className="font-serif text-2xl text-ink tracking-wide mb-6">我的订单</h1>
       <Spin spinning={loading}>
         {data.length === 0 && !loading ? (
           <Empty description="暂无订单" />
@@ -131,27 +132,28 @@ function OrdersPage() {
 
       {/* 退票弹窗 */}
       <Modal
-        title="退票"
+        title={<span className="font-serif text-lg">退票</span>}
         open={refundModal.open}
         onOk={handleRefund}
         onCancel={closeRefundModal}
         confirmLoading={refunding}
         okText="确认退票"
+        cancelText="取消"
         okButtonProps={{ danger: true }}
       >
         <Spin spinning={loadingTickets}>
           {refundTickets.length === 0 && !loadingTickets ? (
-            <Text type="secondary">该订单暂无可退的票</Text>
+            <Text className="text-light-ink">该订单暂无可退的票</Text>
           ) : (
             <>
-              <Text>请选择要退的票：</Text>
-              <div style={{ marginTop: 12 }}>
+              <Text className="text-stone">请选择要退的票：</Text>
+              <div className="mt-3">
                 <Checkbox.Group value={selectedTicketIds} onChange={(v) => setSelectedTicketIds(v as number[])}>
                   {refundTickets.map((t) => (
                     <Checkbox
                       key={t.ticketId}
                       value={t.ticketId}
-                      style={{ display: 'block', marginBottom: 6 }}
+                      className="block mb-1.5"
                     >
                       {t.seatRow}排{t.seatCol}座 — ¥{t.price.toFixed(2)}（票号：{t.ticketId}）
                     </Checkbox>
@@ -159,8 +161,8 @@ function OrdersPage() {
                 </Checkbox.Group>
               </div>
               {selectedTicketIds.length > 0 && (
-                <div style={{ marginTop: 12 }}>
-                  <Text strong>
+                <div className="mt-3">
+                  <Text strong className="!text-ink">
                     已选 {selectedTicketIds.length} 张，退款金额：
                     ¥{refundTickets
                       .filter((t) => selectedTicketIds.includes(t.ticketId))
