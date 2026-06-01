@@ -10,6 +10,10 @@ async function enableMock() {
     const { worker } = await import('./mocks/browser');
     return worker.start({ onUnhandledRequest: 'bypass' });
   }
+  if ('serviceWorker' in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+  }
 }
 
 enableMock().then(() => {
