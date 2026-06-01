@@ -1,0 +1,4 @@
+[
+  { "id": 1, "playId": 1, "playName": "雷雨", "studioId": 1, "studioName": "1号厅", "showTime": "2026-06-15 19:30:00", "ticketPrice": 180.00, "status": 1 },
+  { "id": 2, "playId": 2, "playName": "歌剧魅影", "studioId": 2, "studioName": "2号厅", "showTime": "2026-06-20 19:00:00", "ticketPrice": 280.00, "status": 1 }
+]

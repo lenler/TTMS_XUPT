@@ -1,0 +1,23 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: ttms-backend
+  datasource:
+    url: jdbc:mysql://localhost:3306/ttms?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ttms
+    password: ttms
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+ttms:
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+  ticket:
+    lock-timeout-minutes: 10

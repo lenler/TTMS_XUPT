@@ -1,0 +1,6 @@
+[
+  { "id": 1, "typeId": 1, "typeName": "话剧", "langId": 1, "langName": "中文", "name": "雷雨", "introduction": "曹禺经典话剧，讲述周鲁两家三十年的恩怨纠葛", "poster": "/images/plays/thunderstorm.jpg", "video": "", "duration": 150, "basePrice": 180.00, "status": 1 },
+  { "id": 2, "typeId": 2, "typeName": "音乐剧", "langId": 2, "langName": "英文", "name": "歌剧魅影", "introduction": "安德鲁·韦伯经典音乐剧，讲述巴黎歌剧院的神秘故事", "poster": "/images/plays/phantom.jpg", "video": "", "duration": 150, "basePrice": 280.00, "status": 1 },
+  { "id": 3, "typeId": 3, "typeName": "舞剧", "langId": 1, "langName": "中文", "name": "红色娘子军", "introduction": "中国经典芭蕾舞剧，展现革命年代女性英勇精神", "poster": "/images/plays/red-women.jpg", "video": "", "duration": 120, "basePrice": 200.00, "status": 1 },
+  { "id": 4, "typeId": 1, "typeName": "话剧", "langId": 1, "langName": "中文", "name": "茶馆", "introduction": "老舍经典话剧，展现旧北京社会变迁", "poster": "/images/plays/teahouse.jpg", "video": "", "duration": 180, "basePrice": 160.00, "status": 1 }
+]
