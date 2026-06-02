@@ -43,8 +43,47 @@ public class AdminAuthCompatController {
         ));
     }
 
+    /**
+     * 获取当前用户菜单权限
+     * 返回格式需与前端 authStore.fetchMenus 匹配：data.menus
+     * 联调阶段返回全量菜单，后续接入 RBAC 后按角色过滤
+     */
     @GetMapping("/current-user/menus")
-    public AdminApiResponse<List<Map<String, Object>>> currentUserMenus() {
-        return AdminApiResponse.ok(List.of());
+    public AdminApiResponse<Map<String, Object>> currentUserMenus() {
+        List<Map<String, Object>> menus = buildDefaultMenus();
+        return AdminApiResponse.ok(Map.of("menus", menus));
+    }
+
+    /** 构建默认全量菜单树（与前端 Mock 结构一致） */
+    private List<Map<String, Object>> buildDefaultMenus() {
+        return List.of(
+            // 工作台（一级菜单，无子级）
+            Map.<String, Object>of("name", "工作台", "url", "/admin/dashboard"),
+            // 剧院管理（含子菜单）
+            Map.<String, Object>of("name", "剧院管理", "children", List.of(
+                Map.<String, Object>of("name", "演出厅管理", "url", "/admin/studio"),
+                Map.<String, Object>of("name", "剧目管理", "url", "/admin/play"),
+                Map.<String, Object>of("name", "演出计划", "url", "/admin/schedule"),
+                Map.<String, Object>of("name", "验票管理", "url", "/admin/check")
+            )),
+            // 票务管理（含子菜单）
+            Map.<String, Object>of("name", "票务管理", "children", List.of(
+                Map.<String, Object>of("name", "售票记录", "url", "/admin/sale"),
+                Map.<String, Object>of("name", "退票处理", "url", "/admin/sale/refund")
+            )),
+            // 用户管理（含子菜单）
+            Map.<String, Object>of("name", "用户管理", "children", List.of(
+                Map.<String, Object>of("name", "员工管理", "url", "/admin/employee"),
+                Map.<String, Object>of("name", "观众管理", "url", "/admin/customer")
+            )),
+            // 权限管理（含子菜单）
+            Map.<String, Object>of("name", "权限管理", "children", List.of(
+                Map.<String, Object>of("name", "角色管理", "url", "/admin/role")
+            )),
+            // 财务管理（含子菜单）
+            Map.<String, Object>of("name", "财务管理", "children", List.of(
+                Map.<String, Object>of("name", "财务统计", "url", "/admin/finance")
+            ))
+        );
     }
 }
