@@ -1,8 +1,9 @@
-// 观众端首页：热卖剧目 + 近期演出
+// 观众端首页 —— 水墨留白 · 东方极简
+// Hero 大标题 + 热卖剧目 + 近期演出
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Row, Col, Typography, Spin, Empty, Tag, Button } from 'antd';
+import { Typography, Spin, Empty, Tag, Button } from 'antd';
 import { FireOutlined, ClockCircleOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import { getHome } from '@/services/customer/home';
 
@@ -38,80 +39,111 @@ function HomePage() {
 
   return (
     <Spin spinning={loading}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        {/* 热卖剧目 */}
-        <Title level={3} style={{ marginBottom: 16 }}>
-          <FireOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />热卖剧目
-        </Title>
-        {hotPlays.length === 0 && !loading && <Empty description="暂无剧目" />}
-        <Row gutter={[16, 16]} style={{ marginBottom: 40 }}>
-          {hotPlays.map((play) => (
-            <Col key={play.id} xs={24} sm={12} md={6}>
-              <Card
-                hoverable
-                cover={
-                  <div style={{ height: 200, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Text type="secondary" style={{ fontSize: 48 }}>🎭</Text>
-                  </div>
-                }
-                onClick={() => navigate('/schedule')}
-              >
-                <Card.Meta
-                  title={play.name}
-                  description={
-                    <>
-                      <Tag color="blue">{play.typeName}</Tag>
-                      <Tag>{play.duration}分钟</Tag>
-                      <div style={{ marginTop: 8 }}>
-                        <Text type="secondary">基础票价：</Text>
-                        <Text strong>¥{play.basePrice.toFixed(2)}</Text>
-                      </div>
-                      <div>
-                        <Text type="secondary">已售：</Text>
-                        <Text style={{ color: '#ff4d4f' }}>{play.soldCount} 张</Text>
-                      </div>
-                    </>
-                  }
-                />
-              </Card>
-            </Col>
-          ))}
-        </Row>
+      {/* ===== Hero 区域 ===== */}
+      <section className="text-center py-16 mb-12">
+        <h1 className="font-serif text-4xl md:text-5xl text-ink tracking-wider mb-4">
+          汉唐剧院
+        </h1>
+        <p className="text-stone text-lg mb-8 max-w-md mx-auto leading-relaxed">
+          传承经典，演绎非凡。感受舞台艺术的永恒魅力。
+        </p>
+        <button
+          onClick={() => navigate('/schedule')}
+          className="inline-block bg-gold text-white px-10 py-3 rounded-sm font-medium
+                     hover:bg-[#B8944F] transition-soft cursor-pointer"
+        >
+          立即购票
+        </button>
+      </section>
 
-        {/* 近期演出 */}
-        <Title level={3} style={{ marginBottom: 16 }}>
-          <ClockCircleOutlined style={{ marginRight: 8 }} />近期演出
-        </Title>
-        {upcoming.length === 0 && !loading && <Empty description="暂无近期演出" />}
-        <Row gutter={[16, 16]}>
-          {upcoming.map((item) => (
-            <Col key={item.id} xs={24} sm={12} md={8}>
-              <Card hoverable onClick={() => navigate(`/seats/${item.id}`)}>
-                <Title level={5} style={{ marginBottom: 8 }}>{item.playName}</Title>
-                <div style={{ marginBottom: 4 }}>
-                  <EnvironmentOutlined /> <Text>{item.studioName}</Text>
+      {/* ===== 热卖剧目 ===== */}
+      <section className="mb-14">
+        <h2 className="font-serif text-2xl text-ink tracking-wide mb-6 flex items-center gap-2">
+          <FireOutlined className="text-gold" />
+          热卖剧目
+        </h2>
+        {hotPlays.length === 0 && !loading && <Empty description="暂无剧目" />}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {hotPlays.map((play) => (
+            <div
+              key={play.id}
+              onClick={() => navigate('/schedule')}
+              className="border border-warm bg-cream rounded-sm overflow-hidden cursor-pointer
+                         hover:border-stone hover:shadow-sm transition-soft group"
+            >
+              {/* 封面占位 */}
+              <div className="h-48 bg-cream flex items-center justify-center group-hover:opacity-80 transition-soft">
+                <Text className="text-6xl text-light-ink">🎭</Text>
+              </div>
+              <div className="p-4">
+                <h3 className="font-serif text-lg text-ink mb-2 truncate">{play.name}</h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <Tag color="gold">{play.typeName}</Tag>
+                  <Tag>{play.duration}分钟</Tag>
                 </div>
-                <div style={{ marginBottom: 4 }}>
-                  <ClockCircleOutlined /> <Text>{item.showTime}</Text>
+                <div className="flex justify-between text-sm">
+                  <span className="text-stone">基础票价</span>
+                  <span className="text-ink font-medium">¥{play.basePrice.toFixed(2)}</span>
                 </div>
-                <div style={{ marginBottom: 4 }}>
-                  <Text type="secondary">票价：</Text>
-                  <Text strong style={{ color: '#ff4d4f' }}>¥{item.ticketPrice.toFixed(2)}</Text>
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-stone">已售</span>
+                  <span className="text-gold font-medium">{play.soldCount} 张</span>
                 </div>
-                <div>
-                  <Text type="secondary">剩余座位：</Text>
-                  <Text style={{ color: item.availableSeats > 0 ? '#52c41a' : '#ff4d4f' }}>
-                    {item.availableSeats} 座
-                  </Text>
-                </div>
-                <Button type="primary" style={{ marginTop: 12 }} block>
-                  立即购票
-                </Button>
-              </Card>
-            </Col>
+              </div>
+            </div>
           ))}
-        </Row>
-      </div>
+        </div>
+      </section>
+
+      {/* ===== 近期演出 ===== */}
+      <section>
+        <h2 className="font-serif text-2xl text-ink tracking-wide mb-6 flex items-center gap-2">
+          <ClockCircleOutlined className="text-gold" />
+          近期演出
+        </h2>
+        {upcoming.length === 0 && !loading && <Empty description="暂无近期演出" />}
+        <div className="space-y-3">
+          {upcoming.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => navigate(`/seats/${item.id}`)}
+              className="border border-warm bg-cream rounded-sm p-5 flex flex-col sm:flex-row
+                         sm:items-center sm:justify-between cursor-pointer
+                         hover:border-stone hover:shadow-sm transition-soft group"
+            >
+              <div className="flex-1 mb-3 sm:mb-0">
+                <Title level={5} className="!mb-1 !font-serif">{item.playName}</Title>
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-stone">
+                  <span>
+                    <EnvironmentOutlined className="mr-1 text-light-ink" />
+                    {item.studioName}
+                  </span>
+                  <span>
+                    <ClockCircleOutlined className="mr-1 text-light-ink" />
+                    {item.showTime}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="text-right">
+                  <div className="text-2xl text-ink font-medium">
+                    ¥{item.ticketPrice.toFixed(2)}
+                  </div>
+                  <div className={`text-sm ${item.availableSeats > 0 ? 'text-stone' : 'text-red-500'}`}>
+                    剩余 {item.availableSeats} 座
+                  </div>
+                </div>
+                <Button
+                  className="!border-ink !text-ink hover:!bg-ink hover:!text-white !rounded-sm
+                             transition-soft !font-medium"
+                >
+                  购票
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
     </Spin>
   );
 }

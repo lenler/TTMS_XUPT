@@ -1,12 +1,11 @@
-// 观众端登录页
+// 观众端登录页 —— 水墨留白 · 东方极简
+// 居中卡片 + 衬线标题 + 线性输入框
 
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Card, Form, Input, Button, Typography, message } from 'antd';
+import { Form, Input, Button, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { customerLogin } from '@/services/customer/auth';
-
-const { Title } = Typography;
 
 /** 观众端登录页 */
 function CustomerLoginPage() {
@@ -29,26 +28,45 @@ function CustomerLoginPage() {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '80px auto' }}>
-      <Card>
-        <Title level={3} style={{ textAlign: 'center', marginBottom: 24 }}>观众登录</Title>
+    <div className="max-w-sm mx-auto pt-20 pb-20">
+      <div className="border border-warm bg-cream rounded-sm p-8">
+        {/* 品牌标题 */}
+        <h1 className="font-serif text-2xl text-ink tracking-widest text-center mb-8">
+          汉唐剧院
+        </h1>
+
         <Form onFinish={onFinish} size="large">
           <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
-            <Input prefix={<UserOutlined />} placeholder="用户名" />
+            <Input
+              prefix={<UserOutlined className="text-light-ink" />}
+              placeholder="用户名"
+            />
           </Form.Item>
           <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
-            <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+            <Input.Password
+              prefix={<LockOutlined className="text-light-ink" />}
+              placeholder="密码"
+            />
           </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading} block>
+          <Form.Item className="!mb-4">
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              block
+              className="!bg-ink !border-ink hover:!bg-gold hover:!border-gold !rounded-sm !h-10"
+            >
               登录
             </Button>
           </Form.Item>
-          <div style={{ textAlign: 'center' }}>
-            还没有账号？<Link to="/register">立即注册</Link>
+          <div className="text-center text-sm">
+            <span className="text-stone">还没有账号？</span>
+            <Link to="/register" className="text-gold hover:text-[#B8944F] ml-1 transition-soft">
+              立即注册
+            </Link>
           </div>
         </Form>
-      </Card>
+      </div>
     </div>
   );
 }
