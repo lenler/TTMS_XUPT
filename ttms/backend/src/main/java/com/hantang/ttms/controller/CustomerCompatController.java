@@ -285,7 +285,7 @@ public class CustomerCompatController {
             throw new BusinessException("所选座位无对应票据");
         }
         for (Ticket t : tickets) {
-            if (t.getStatus() != TicketStatus.AVAILABLE) {
+            if (t.getStatus() != TicketStatus.AVAILABLE && t.getStatus() != TicketStatus.REFUNDED) {
                 throw new BusinessException("座位 " + t.getSeat().getRowNo() + "排" + t.getSeat().getColNo() + "座 已被占用");
             }
         }
@@ -444,12 +444,15 @@ public class CustomerCompatController {
 
     // ==================== 工具方法 ====================
 
+    /** 票据状态 → 座位展示状态：0=可选 1=已锁 2=不可选 */
     private int ticketStatusToSeatStatus(TicketStatus status) {
         return switch (status) {
             case AVAILABLE -> 0;
+            case REFUNDED -> 0;  // 已退票恢复为可选
             case LOCKED -> 1;
             case SOLD -> 2;
-            default -> 0;
+            case CHECKED -> 2;   // 已验票不可再选
+            case VOIDED -> 2;    // 已作废不可选
         };
     }
 
