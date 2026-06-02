@@ -350,6 +350,12 @@ public class CustomerCompatController {
         }
 
         List<Long> ticketIds = session.tickets.stream().map(Ticket::getId).toList();
+        // 先将锁定的票恢复为可用（placeOrder 内部会重新锁定并创建订单）
+        for (Ticket t : session.tickets) {
+            t.setStatus(TicketStatus.AVAILABLE);
+            t.setLockTime(null);
+            ticketRepository.save(t);
+        }
         SaleResponse order = saleService.placeOrder(
             new OrderRequest(1L /* 默认 customerId=1 */, null, ticketIds)
         );
