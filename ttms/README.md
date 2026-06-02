@@ -1,11 +1,11 @@
 # TTMS 汉唐剧院票务管理系统
 
-这是基于需求文档整理出的完整项目架构骨架，包含 Spring Boot 后端、Vue 前端、MySQL 数据库脚本和架构文档。
+这是基于需求文档整理出的完整项目架构骨架，包含 Spring Boot 后端、React 前端、MySQL 数据库脚本和架构文档。
 
 ## 快速入口
 
 - 后端工程：[backend](./backend)
-- 前端工程：[frontend](./frontend)
+- 前端工程：[../ttms-frontend](../ttms-frontend)
 - 数据库脚本：[database](./database)
 - 架构文档：[docs/architecture.md](./docs/architecture.md)
 - API 清单：[docs/api.md](./docs/api.md)

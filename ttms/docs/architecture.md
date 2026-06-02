@@ -7,7 +7,7 @@
 ## 技术栈
 
 - 后端：Spring Boot 3、Spring Web、MyBatis、Spring Security、MySQL。
-- 前端：Vue 3、Vite、Vue Router、Pinia、Axios、lucide-vue-next。
+- 前端：React、TypeScript、Vite、React Router、Ant Design、Axios、Zustand。
 - 数据库：MySQL 8，集中式关系数据存储。
 - 部署形态：浏览器前端访问 Tomcat/Spring Boot 服务端，服务端访问 MySQL。
 
@@ -26,11 +26,11 @@ ttms/
       common/             统一响应、异常
       config/             Web 配置
       security/           安全配置
-  frontend/               Vue 管理端/观众端
-    src/api/              API 封装
-    src/router/           路由
-    src/stores/           会话与权限状态
-    src/views/            业务页面
+ttms-frontend/            React 管理端/观众端
+  src/services/           API 封装
+  src/routes/             路由
+  src/stores/             会话与业务状态
+  src/pages/              业务页面
   database/               MySQL 建表与初始化脚本
   docs/                   架构、接口和部署说明
 ```

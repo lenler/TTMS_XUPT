@@ -12,8 +12,6 @@ ttms-frontend/.env.*
 
 # Backend generated files
 ttms/backend/target/
-ttms/frontend/node_modules/
-ttms/frontend/dist/
 
 # Local runtime files
 *.log
