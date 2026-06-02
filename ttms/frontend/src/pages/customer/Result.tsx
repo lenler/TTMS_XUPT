@@ -38,7 +38,7 @@ function ResultPage() {
     );
   }
 
-  const isSuccess = data.orderStatus === 'paid';
+  const isSuccess = data.orderStatus === 'PAID' || data.orderStatus === 'paid';
 
   return (
     <div className="max-w-lg mx-auto">
