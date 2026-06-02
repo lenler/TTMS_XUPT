@@ -138,7 +138,6 @@ pnpm dev -- --host 127.0.0.1
 | `ttms/docs/TTMS---软件设计(BS).pdf` | 原始软件设计 PDF（图片类型） |
 | `ttms/docs/前端设计文档.md` | 前端工程化设计文档 |
 | `ttms/docs/接口设计文档.md` | 前后端 REST API 接口契约 |
-| `ttms/docs/服务端设计文档.md` | 后端分层设计文档 |
 | `ttms/docs/开发日志/` | 前端、后端、文档开发日志 |
 
 ## 技术栈

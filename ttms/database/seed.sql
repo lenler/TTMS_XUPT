@@ -21,8 +21,8 @@ VALUES
   (1, 'admin', '系统管理员', '系统管理员', '123456', 'ACTIVE', NOW(), NOW()),
   (2, 'seller01', '售票员01', '售票员', '123456', 'ACTIVE', NOW(), NOW());
 
-INSERT INTO customers (id, username, password_hash, name, phone, balance, status, created_at, updated_at)
-VALUES (1, 'customer01', '123456', '示例观众', '13800000000', 0, 'ACTIVE', NOW(), NOW());
+INSERT INTO customers (id, username, password_hash, name, phone, gender, payment_password, balance, status, created_at, updated_at)
+VALUES (1, 'customer01', '123456', '示例观众', '13800000000', 0, '123456', 0, 'ACTIVE', NOW(), NOW());
 
 INSERT INTO roles (id, name, created_at, updated_at)
 VALUES (1, 'ADMIN', NOW(), NOW()), (2, 'SELLER', NOW(), NOW()), (3, 'FINANCE', NOW(), NOW()), (4, 'CHECKER', NOW(), NOW());

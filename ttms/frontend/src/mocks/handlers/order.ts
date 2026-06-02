@@ -168,7 +168,7 @@ export const orderHandlers = [
       let rowStr = '';
       for (let c = 1; c <= colCount; c++) {
         const seat = seats.find((st) => st.row === r && st.col === c);
-        rowStr += seat && seat.status === 0 ? 'a' : '_';
+        rowStr += seat ? 'a' : '_';
       }
       layout.push(rowStr);
     }
@@ -266,10 +266,20 @@ export const orderHandlers = [
     const play = s ? getPlayById(s.playId) : null;
     const totalPrice = lockTickets.reduce((sum, t) => sum + t.price, 0);
 
+    // 从 localStorage 读取当前登录观众 ID（注册/登录时已存入 customerInfo）
+    let customerId = 1;
+    try {
+      const infoStr = localStorage.getItem('customerInfo');
+      if (infoStr) {
+        const info = JSON.parse(infoStr);
+        customerId = info.id || 1;
+      }
+    } catch { /* 解析失败用默认值 */ }
+
     const orderId = orderNextId++;
     const newOrder: CustomerOrder = {
       orderId,
-      customerId: 1,
+      customerId,
       lockToken: body.lockToken,
       tickets: lockTickets.map((t) => ({
         ticketId: t.ticketId, seatRow: t.seatRow, seatCol: t.seatCol,

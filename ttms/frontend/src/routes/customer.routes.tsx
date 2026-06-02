@@ -23,17 +23,17 @@ const customerRoutes: RouteObject[] = [
     children: [
       { index: true, element: <HomePage /> },
       { path: 'schedule', element: <SchedulePage /> },
-      { path: 'seats/:scheduleId', element: <SeatsPage /> },
-      { path: 'order', element: <OrderPage /> },
-      { path: 'result/:orderId', element: <ResultPage /> },
       { path: 'board', element: <BoardPage /> },
       { path: 'contact', element: <ContactPage /> },
       { path: 'login', element: <CustomerLoginPage /> },
       { path: 'register', element: <RegisterPage /> },
-      // 需要登录才能访问
+      // 需要登录才能访问（购票流程 + 我的订单）
       {
         element: <CustomerGuard />,
         children: [
+          { path: 'seats/:scheduleId', element: <SeatsPage /> },
+          { path: 'order', element: <OrderPage /> },
+          { path: 'result/:orderId', element: <ResultPage /> },
           { path: 'orders', element: <OrdersPage /> },
         ],
       },

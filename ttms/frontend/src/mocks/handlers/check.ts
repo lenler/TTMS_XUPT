@@ -27,15 +27,11 @@ export const checkHandlers = [
   /** 查询验票记录 */
   http.get('/admin/api/checks', ({ request }) => {
     const url = new URL(request.url);
-    const scheduleId = url.searchParams.get('scheduleId') || '';
     const ticketId = url.searchParams.get('ticketId') || '';
     const page = Number(url.searchParams.get('page')) || 1;
     const pageSize = Number(url.searchParams.get('pageSize')) || 10;
 
     let filtered = checkRecords;
-    if (scheduleId) {
-      // 简单处理：filter by matching ticket's schedule
-    }
     if (ticketId) {
       filtered = filtered.filter((r) => r.ticketId === Number(ticketId));
     }

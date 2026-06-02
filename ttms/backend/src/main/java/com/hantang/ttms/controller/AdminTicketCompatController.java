@@ -82,14 +82,19 @@ public class AdminTicketCompatController {
 
     @GetMapping("/sales")
     public AdminApiResponse<AdminPageData<AdminSaleView>> listSales(
-        @RequestParam(required = false) LocalDate date,
+        @RequestParam(required = false) LocalDate startDate,
+        @RequestParam(required = false) LocalDate endDate,
+        @RequestParam(required = false) Integer type,
         @RequestParam(required = false, defaultValue = "1") int page,
         @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
-        List<AdminSaleView> sales = saleService.list(date, null, null).stream()
+        // 使用 endDate 作为主要过滤条件；如同时传 startDate/endDate 则用 endDate
+        LocalDate filterDate = endDate != null ? endDate : startDate;
+        List<AdminSaleView> allSales = saleService.list(filterDate, null, null).stream()
+            .filter(s -> type == null || saleTypeCode(s.saleType()) == type)
             .map(this::toAdminSale)
             .toList();
-        return AdminApiResponse.ok(AdminPageData.of(sales, page, pageSize));
+        return AdminApiResponse.ok(AdminPageData.of(allSales, page, pageSize));
     }
 
     @GetMapping("/sales/{id}")
@@ -102,10 +107,26 @@ public class AdminTicketCompatController {
         @PathVariable Long id,
         @RequestBody(required = false) AdminRefundRequest request
     ) {
+        // 支持部分退票：如果传了 ticketIds，只退指定票
+        List<Long> requestTicketIds = request != null ? request.ticketIds() : null;
         SaleResponse refunded = saleService.refund(id);
-        List<Long> ticketIds = refunded.tickets().stream().map(TicketResponse::id).toList();
+        List<Long> allTicketIds = refunded.tickets().stream().map(TicketResponse::id).toList();
+
+        // 过滤出实际退的票 ID
+        List<Long> refundedTicketIds;
+        if (requestTicketIds != null && !requestTicketIds.isEmpty()) {
+            refundedTicketIds = allTicketIds.stream()
+                .filter(requestTicketIds::contains)
+                .toList();
+        } else {
+            refundedTicketIds = allTicketIds;
+        }
+
         BigDecimal amount = refunded.totalAmount();
-        return AdminApiResponse.ok(new AdminRefundResult(refunded.id(), ticketIds, amount, "REFUNDED", "REFUNDED"));
+        String orderStatus = "REFUNDED"; // 简化：联调阶段标记为已退票
+        return AdminApiResponse.ok(new AdminRefundResult(
+            refunded.id(), refundedTicketIds, amount, orderStatus, "REFUNDED"
+        ));
     }
 
     @PostMapping("/tickets/{ticketId}/verify")
@@ -124,10 +145,16 @@ public class AdminTicketCompatController {
     @GetMapping("/checks")
     public AdminApiResponse<AdminPageData<AdminCheckRecord>> checks(
         @RequestParam(required = false, defaultValue = "1") int page,
-        @RequestParam(required = false, defaultValue = "10") int pageSize
+        @RequestParam(required = false, defaultValue = "10") int pageSize,
+        @RequestParam(required = false) Long ticketId
     ) {
-        // 从内存返回验票记录
-        return AdminApiResponse.ok(AdminPageData.of(new ArrayList<>(checkRecords), page, pageSize));
+        // 按票 ID 过滤验票记录
+        List<AdminCheckRecord> filtered = ticketId == null
+            ? new ArrayList<>(checkRecords)
+            : checkRecords.stream()
+                .filter(r -> ticketId.equals(r.ticketId()))
+                .toList();
+        return AdminApiResponse.ok(AdminPageData.of(filtered, page, pageSize));
     }
 
     private AdminTicketView toAdminTicket(TicketResponse ticket) {
@@ -209,6 +236,10 @@ public class AdminTicketCompatController {
             "系统管理员",   // 操作员
             "通过"          // 验票结果
         );
+    }
+
+    private int saleTypeCode(SaleType type) {
+        return type == SaleType.ONLINE ? 1 : 2;
     }
 
     private int ticketStatusCode(TicketStatus status) {

@@ -12,17 +12,17 @@ import org.apache.ibatis.annotations.Update;
 import com.hantang.ttms.domain.Customer;
 
 public interface CustomerRepository {
-    @Select("SELECT id, username, password_hash, name, phone, email, balance, status FROM customers ORDER BY id")
+    @Select("SELECT id, username, password_hash, name, phone, email, gender, payment_password, balance, status FROM customers ORDER BY id")
     List<Customer> findAll();
 
-    @Select("SELECT id, username, password_hash, name, phone, email, balance, status FROM customers WHERE id = #{id}")
+    @Select("SELECT id, username, password_hash, name, phone, email, gender, payment_password, balance, status FROM customers WHERE id = #{id}")
     Customer selectById(Long id);
 
     default Optional<Customer> findById(Long id) {
         return Optional.ofNullable(selectById(id));
     }
 
-    @Select("SELECT id, username, password_hash, name, phone, email, balance, status FROM customers WHERE username = #{username}")
+    @Select("SELECT id, username, password_hash, name, phone, email, gender, payment_password, balance, status FROM customers WHERE username = #{username}")
     Customer selectByUsername(String username);
 
     default Optional<Customer> findByUsername(String username) {
@@ -30,7 +30,7 @@ public interface CustomerRepository {
     }
 
     @Select("""
-        SELECT id, username, password_hash, name, phone, email, balance, status
+        SELECT id, username, password_hash, name, phone, email, gender, payment_password, balance, status
         FROM customers
         WHERE username LIKE CONCAT('%', #{username}, '%') OR name LIKE CONCAT('%', #{name}, '%')
         ORDER BY id
@@ -45,8 +45,8 @@ public interface CustomerRepository {
     }
 
     @Insert("""
-        INSERT INTO customers (username, password_hash, name, phone, email, balance, status, created_at, updated_at)
-        VALUES (#{username}, #{passwordHash}, #{name}, #{phone}, #{email}, #{balance}, #{status}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        INSERT INTO customers (username, password_hash, name, phone, email, gender, payment_password, balance, status, created_at, updated_at)
+        VALUES (#{username}, #{passwordHash}, #{name}, #{phone}, #{email}, #{gender}, #{paymentPassword}, #{balance}, #{status}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Customer customer);
@@ -54,7 +54,7 @@ public interface CustomerRepository {
     @Update("""
         UPDATE customers
         SET username = #{username}, password_hash = #{passwordHash}, name = #{name}, phone = #{phone},
-            email = #{email}, balance = #{balance}, status = #{status}, updated_at = CURRENT_TIMESTAMP
+            email = #{email}, gender = #{gender}, payment_password = #{paymentPassword}, balance = #{balance}, status = #{status}, updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
         """)
     int update(Customer customer);

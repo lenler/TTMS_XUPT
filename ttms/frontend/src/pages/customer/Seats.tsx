@@ -186,7 +186,7 @@ function SeatsPage() {
                   return (
                     <div
                       key={cIdx}
-                      onClick={() => ch !== '_' && toggleSeat(seatId, seat?.status || -1)}
+                      onClick={() => ch !== '_' && toggleSeat(seatId, seat?.status ?? -1)}
                       className={`${seatClass} ${cursorClass}`}
                     >
                       {label}

@@ -26,9 +26,27 @@ export function useCRUD<T>(fetchFn: FetchFn) {
           pageSize,
           ...extraParams,
         });
-        setList(res.data.list);
-        setTotal(res.data.total);
-        setPage(pg);
+        const newList = res.data.list;
+        const newTotal = res.data.total;
+        // 如果当前页已超出总页数（如删除最后一页的最后一条），回退到最后一页
+        const lastPage = Math.max(1, Math.ceil(newTotal / pageSize));
+        const correctedPage = pg > lastPage ? lastPage : pg;
+        if (correctedPage !== pg) {
+          // 用正确的页码重新请求
+          const retryRes = await fetchFn({
+            keyword: kw,
+            page: correctedPage,
+            pageSize,
+            ...extraParams,
+          });
+          setList(retryRes.data.list);
+          setTotal(retryRes.data.total);
+          setPage(correctedPage);
+        } else {
+          setList(newList);
+          setTotal(newTotal);
+          setPage(pg);
+        }
       } catch {
         setList([]);
         setTotal(0);

@@ -77,6 +77,8 @@ CREATE TABLE customers (
   name VARCHAR(100),
   phone VARCHAR(30),
   email VARCHAR(100),
+  gender INT NOT NULL DEFAULT 0,
+  payment_password VARCHAR(100),
   balance DECIMAL(10,2) NOT NULL DEFAULT 0,
   status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
   created_at DATETIME NOT NULL,

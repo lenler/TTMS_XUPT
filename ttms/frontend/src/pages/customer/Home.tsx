@@ -67,7 +67,7 @@ function HomePage() {
           {hotPlays.map((play) => (
             <div
               key={play.id}
-              onClick={() => navigate('/schedule')}
+              onClick={() => navigate(`/schedule?playId=${play.id}`)}
               className="border border-warm bg-cream rounded-sm overflow-hidden cursor-pointer
                          hover:border-stone hover:shadow-sm transition-soft group"
             >

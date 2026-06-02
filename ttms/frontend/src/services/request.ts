@@ -8,12 +8,21 @@ const request = axios.create({
   timeout: 10000,
 });
 
-// 请求拦截器：注入 token
+// 请求拦截器：注入 token（管理端 / 观众端分别注入对应 token）
 request.interceptors.request.use((config) => {
-  // 从 localStorage 读取 token（避免循环依赖 stores）
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const url = config.url || '';
+  if (url.startsWith('/customer/')) {
+    // 观众端请求 —— 注入 customerToken
+    const customerToken = localStorage.getItem('customerToken');
+    if (customerToken) {
+      config.headers.Authorization = `Bearer ${customerToken}`;
+    }
+  } else {
+    // 管理端请求 —— 注入管理端 token
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
@@ -35,8 +44,14 @@ request.interceptors.response.use(
       error.message ||
       '网络请求失败';
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      const url = error.config?.url || '';
+      if (url.startsWith('/customer/')) {
+        localStorage.removeItem('customerToken');
+        localStorage.removeItem('customerInfo');
+      } else {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
     }
     message.error(serverMessage);
     return Promise.reject(new Error(serverMessage));

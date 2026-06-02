@@ -14,6 +14,7 @@ import com.hantang.ttms.common.BusinessException;
 import com.hantang.ttms.domain.Customer;
 import com.hantang.ttms.domain.Play;
 import com.hantang.ttms.domain.SaleStatus;
+import com.hantang.ttms.domain.Studio;
 import com.hantang.ttms.domain.SaleType;
 import com.hantang.ttms.domain.Seat;
 import com.hantang.ttms.domain.Status;
@@ -27,7 +28,9 @@ import com.hantang.ttms.dto.SaleResponse;
 import com.hantang.ttms.dto.ScheduleResponse;
 import com.hantang.ttms.dto.TicketResponse;
 import com.hantang.ttms.repository.CustomerRepository;
+import com.hantang.ttms.repository.PlayRepository;
 import com.hantang.ttms.repository.SeatRepository;
+import com.hantang.ttms.repository.StudioRepository;
 import com.hantang.ttms.repository.TicketRepository;
 import com.hantang.ttms.service.AuthService;
 import com.hantang.ttms.service.PlayService;
@@ -51,6 +54,8 @@ public class CustomerCompatController {
     private final TicketRepository ticketRepository;
     private final SeatRepository seatRepository;
     private final CustomerRepository customerRepository;
+    private final StudioRepository studioRepository;
+    private final PlayRepository playRepository;
 
     /** 内存锁座令牌存储（联调阶段，后续接入Redis） */
     private final ConcurrentHashMap<String, LockSession> lockSessions = new ConcurrentHashMap<>();
@@ -64,7 +69,9 @@ public class CustomerCompatController {
         SaleService saleService,
         TicketRepository ticketRepository,
         SeatRepository seatRepository,
-        CustomerRepository customerRepository
+        CustomerRepository customerRepository,
+        StudioRepository studioRepository,
+        PlayRepository playRepository
     ) {
         this.authService = authService;
         this.playService = playService;
@@ -74,6 +81,8 @@ public class CustomerCompatController {
         this.ticketRepository = ticketRepository;
         this.seatRepository = seatRepository;
         this.customerRepository = customerRepository;
+        this.studioRepository = studioRepository;
+        this.playRepository = playRepository;
     }
 
     // ==================== 首页 ====================
@@ -149,6 +158,12 @@ public class CustomerCompatController {
         customer.setName((String) body.get("name"));
         customer.setPhone((String) body.get("phone"));
         customer.setEmail((String) body.get("email"));
+        // 性别：0=未知 1=男 2=女
+        Object genderObj = body.get("gender");
+        customer.setGender(genderObj instanceof Number n ? n.intValue() : 0);
+        // 支付密码
+        Object payPwdObj = body.get("paymentPassword");
+        customer.setPaymentPassword(payPwdObj instanceof String s ? s : "");
         customer.setBalance(BigDecimal.ZERO);
         customer.setStatus(Status.ACTIVE);
         // MyBatis INSERT SQL 使用 CURRENT_TIMESTAMP，无需手动设置时间
@@ -210,6 +225,12 @@ public class CustomerCompatController {
             .findFirst()
             .orElseThrow(() -> new BusinessException("排期不存在"));
 
+        // 取真实演出厅和剧目信息
+        Studio studio = studioRepository.findById(schedule.studioId())
+            .orElseThrow(() -> new BusinessException("演出厅不存在"));
+        Play play = playRepository.findById(schedule.playId())
+            .orElseThrow(() -> new BusinessException("剧目不存在"));
+
         // 取该排期下的票据（含座位信息）
         List<TicketResponse> tickets = ticketService.listBySchedule(id);
         List<Map<String, Object>> seats = tickets.stream()
@@ -221,12 +242,13 @@ public class CustomerCompatController {
             ))
             .toList();
 
-        // 座位布局描述
+        // 座位布局描述：按实际演出厅行列数构建
+        int rowCount = studio.getRowCount();
+        int colCount = studio.getColCount();
         List<String> seatLayout = new ArrayList<>();
-        // 假设 8×8 布局
-        for (int row = 0; row < 8; row++) {
+        for (int row = 0; row < rowCount; row++) {
             StringBuilder sb = new StringBuilder();
-            for (int col = 0; col < 8; col++) {
+            for (int col = 0; col < colCount; col++) {
                 final int r = row + 1, c = col + 1;
                 var seat = tickets.stream()
                     .filter(t -> t.rowNo() == r && t.colNo() == c)
@@ -247,16 +269,16 @@ public class CustomerCompatController {
             "play", Map.of(
                 "id", schedule.playId(),
                 "name", schedule.playName(),
-                "poster", "",
-                "typeName", "",
-                "langName", "",
-                "introduction", "",
-                "duration", 120
+                "poster", play.getPosterUrl() != null ? play.getPosterUrl() : "",
+                "typeName", play.getType() != null ? play.getType() : "",
+                "langName", play.getLanguage() != null ? play.getLanguage() : "",
+                "introduction", play.getIntroduction() != null ? play.getIntroduction() : "",
+                "duration", play.getDurationMinutes()
             ),
             "studio", Map.of(
                 "id", schedule.studioId(),
                 "name", schedule.studioName(),
-                "introduction", ""
+                "introduction", studio.getIntroduction() != null ? studio.getIntroduction() : ""
             ),
             "showTime", schedule.showTime().toString(),
             "ticketPrice", schedule.ticketPrice(),
@@ -346,13 +368,22 @@ public class CustomerCompatController {
         @PathVariable Long id,
         @RequestBody Map<String, Object> body
     ) {
-        BigDecimal paymentAmount = body.get("paymentAmount") != null
-            ? new BigDecimal(body.get("paymentAmount").toString())
-            : BigDecimal.ZERO;
+        // 前端发送 paymentMethod 和 paymentPassword，后端计算应付金额
+        String paymentMethod = body.get("paymentMethod") != null
+            ? body.get("paymentMethod").toString()
+            : "balance";
+        String paymentPassword = body.get("paymentPassword") != null
+            ? body.get("paymentPassword").toString()
+            : "";
 
-        SaleResponse paid = saleService.makePayment(id, paymentAmount.compareTo(BigDecimal.ZERO) == 0
-            ? saleService.get(id).totalAmount()
-            : paymentAmount);
+        // 余额支付时校验支付密码（默认 123456）
+        if ("balance".equals(paymentMethod) && !"123456".equals(paymentPassword)) {
+            throw new BusinessException(20005, "支付密码错误");
+        }
+
+        // 全额支付
+        SaleResponse sale = saleService.get(id);
+        SaleResponse paid = saleService.makePayment(id, sale.totalAmount());
 
         List<Map<String, Object>> paidTickets = paid.tickets().stream()
             .map(t -> Map.<String, Object>of(
@@ -391,17 +422,38 @@ public class CustomerCompatController {
         List<SaleResponse> sales = saleService.list(null, null, 1L);
         List<Map<String, Object>> items = sales.stream()
             .filter(s -> status == null || status.isEmpty() || s.status().name().equalsIgnoreCase(status))
-            .map(s -> Map.<String, Object>of(
-                "orderId", s.id(),
-                "playName", "",
-                "poster", "",
-                "studioName", "",
-                "showTime", s.saleTime().toString(),
-                "ticketCount", s.tickets().size(),
-                "totalPrice", s.totalAmount(),
-                "status", s.status().name(),
-                "createdAt", s.saleTime().toString()
-            ))
+            .map(s -> {
+                // 从第一张票关联的排期获取演出时间和剧目/演出厅信息
+                String showTime = "";
+                String playName = "";
+                String poster = "";
+                String studioName = "";
+                if (!s.tickets().isEmpty()) {
+                    Ticket firstTicket = ticketRepository.findDetailedById(s.tickets().get(0).id()).orElse(null);
+                    if (firstTicket != null && firstTicket.getSchedule() != null) {
+                        showTime = firstTicket.getSchedule().getShowTime().toString();
+                        if (firstTicket.getSchedule().getPlay() != null) {
+                            playName = firstTicket.getSchedule().getPlay().getName();
+                            poster = firstTicket.getSchedule().getPlay().getPosterUrl() != null
+                                ? firstTicket.getSchedule().getPlay().getPosterUrl() : "";
+                        }
+                        if (firstTicket.getSchedule().getStudio() != null) {
+                            studioName = firstTicket.getSchedule().getStudio().getName();
+                        }
+                    }
+                }
+                return Map.<String, Object>of(
+                    "orderId", s.id(),
+                    "playName", playName,
+                    "poster", poster,
+                    "studioName", studioName,
+                    "showTime", showTime,
+                    "ticketCount", s.tickets().size(),
+                    "totalPrice", s.totalAmount(),
+                    "status", s.status().name(),
+                    "createdAt", s.saleTime().toString()
+                );
+            })
             .toList();
         return AdminApiResponse.ok(AdminPageData.of(items, page, pageSize));
     }

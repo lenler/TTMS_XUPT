@@ -26,6 +26,14 @@ public class Customer extends BaseEntity {
     @Column(length = 100)
     private String email;
 
+    /** 性别：0=未知 1=男 2=女 */
+    @Column(nullable = false)
+    private Integer gender = 0;
+
+    /** 支付密码（联调阶段明文存储） */
+    @Column(length = 100)
+    private String paymentPassword;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO;
 
@@ -45,6 +53,10 @@ public class Customer extends BaseEntity {
     public void setPhone(String phone) { this.phone = phone; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+    public Integer getGender() { return gender; }
+    public void setGender(Integer gender) { this.gender = gender; }
+    public String getPaymentPassword() { return paymentPassword; }
+    public void setPaymentPassword(String paymentPassword) { this.paymentPassword = paymentPassword; }
     public BigDecimal getBalance() { return balance; }
     public void setBalance(BigDecimal balance) { this.balance = balance; }
     public Status getStatus() { return status; }

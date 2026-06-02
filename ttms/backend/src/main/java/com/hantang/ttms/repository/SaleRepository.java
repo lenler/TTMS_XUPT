@@ -67,7 +67,7 @@ public interface SaleRepository {
     @Select("SELECT id, employee_no, name, position, phone, email, password_hash, status FROM employees WHERE id = #{id}")
     Employee selectEmployeeById(Long id);
 
-    @Select("SELECT id, username, password_hash, name, phone, email, balance, status FROM customers WHERE id = #{id}")
+    @Select("SELECT id, username, password_hash, name, phone, email, gender, payment_password, balance, status FROM customers WHERE id = #{id}")
     Customer selectCustomerById(Long id);
 
     @Select("""

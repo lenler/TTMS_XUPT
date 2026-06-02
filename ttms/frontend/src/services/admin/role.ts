@@ -49,6 +49,11 @@ export function getResources(): Promise<ApiResponse<{ list: Resource[] }>> {
   return request.get('/admin/api/resources');
 }
 
+/** 查询员工的角色列表 */
+export function getEmployeeRoles(empId: number): Promise<ApiResponse<number[]>> {
+  return request.get(`/admin/api/employees/${empId}/roles`);
+}
+
 /** 为用户分配角色 */
 export function assignEmployeeRoles(empId: number, roleIds: number[]): Promise<ApiResponse<null>> {
   return request.put(`/admin/api/employees/${empId}/roles`, { roleIds });
