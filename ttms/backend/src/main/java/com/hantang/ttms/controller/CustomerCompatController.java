@@ -378,7 +378,7 @@ public class CustomerCompatController {
 
         // 余额支付时校验支付密码（默认 123456）
         if ("balance".equals(paymentMethod) && !"123456".equals(paymentPassword)) {
-            throw new BusinessException(20005, "支付密码错误");
+            throw new BusinessException("20005", "支付密码错误");
         }
 
         // 全额支付
