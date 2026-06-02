@@ -2,6 +2,9 @@ package com.hantang.ttms.domain;
 
 import jakarta.persistence.*;
 
+/**
+ * 资源实体（菜单/按钮等权限资源）
+ */
 @Entity
 @Table(name = "resources")
 public class Resource extends BaseEntity {
