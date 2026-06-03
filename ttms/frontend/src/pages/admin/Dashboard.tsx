@@ -31,6 +31,8 @@ function DashboardPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [overview, setOverview] = useState<FinanceOverview | null>(null);
+  const topPlay = overview?.topPlay;
+  const hasTopPlay = !!topPlay?.playName && typeof topPlay.sales === 'number';
 
   useEffect(() => {
     setLoading(true);
@@ -89,11 +91,11 @@ function DashboardPage() {
         </Row>
 
         {/* 热卖剧目 */}
-        {overview?.topPlay && (
+        {hasTopPlay && (
           <Card style={{ marginBottom: 24 }} size="small">
             <Text type="secondary">热卖剧目：</Text>
-            <Text strong style={{ fontSize: 16 }}>{overview.topPlay.playName}</Text>
-            <Tag color="red" style={{ marginLeft: 12 }}>¥{overview.topPlay.sales.toFixed(2)}</Tag>
+            <Text strong style={{ fontSize: 16 }}>{topPlay.playName}</Text>
+            <Tag color="red" style={{ marginLeft: 12 }}>¥{topPlay.sales.toFixed(2)}</Tag>
           </Card>
         )}
 

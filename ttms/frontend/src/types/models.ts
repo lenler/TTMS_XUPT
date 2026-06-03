@@ -104,6 +104,8 @@ export interface Customer {
   email: string;
   username: string;
   balance: number;
+  rechargeTotal?: number;
+  rechargeCount?: number;
   status: number;
 }
 

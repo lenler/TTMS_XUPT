@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Spin, Input, Radio, message, Divider } from 'antd';
 import { getOrder, payOrder } from '@/services/customer/order';
+import { getProfile } from '@/services/customer/auth';
 import { useCartStore } from '@/stores/cartStore';
 
 interface TicketInfo {
@@ -25,6 +26,7 @@ function OrderPage() {
   const [loading, setLoading] = useState(false);
   const [paying, setPaying] = useState(false);
   const [order, setOrder] = useState<OrderData | null>(null);
+  const [balance, setBalance] = useState(0);
   const [paymentMethod] = useState('balance');
   const [paymentPassword, setPaymentPassword] = useState('');
   const { clearCart } = useCartStore();
@@ -32,19 +34,34 @@ function OrderPage() {
   useEffect(() => {
     if (!orderId) return;
     setLoading(true);
-    getOrder(Number(orderId))
-      .then((res) => setOrder(res.data))
+    Promise.all([getOrder(Number(orderId)), getProfile()])
+      .then(([orderRes, profileRes]) => {
+        setOrder(orderRes.data);
+        setBalance(profileRes.data.balance);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [orderId]);
 
   /** 支付 */
   const handlePay = async () => {
+    const totalPrice = order?.tickets.reduce((sum, t) => sum + t.price, 0) ?? 0;
+    if (balance < totalPrice) {
+      message.warning('余额不足，请先充值');
+      return;
+    }
     if (!paymentPassword) { message.warning('请输入支付密码'); return; }
     if (!orderId) return;
     setPaying(true);
     try {
       const res = await payOrder(Number(orderId), { paymentMethod, paymentPassword });
+      if (typeof res.data.balance === 'number') {
+        setBalance(res.data.balance);
+        const stored = localStorage.getItem('customerInfo');
+        if (stored) {
+          localStorage.setItem('customerInfo', JSON.stringify({ ...JSON.parse(stored), balance: res.data.balance }));
+        }
+      }
       clearCart();
       navigate(`/result/${orderId}`, { replace: true, state: res.data });
     } catch {
@@ -117,6 +134,15 @@ function OrderPage() {
         <Radio.Group value={paymentMethod}>
           <Radio value="balance" className="text-ink">余额支付</Radio>
         </Radio.Group>
+        <div className="mt-3 text-sm">
+          <span className="text-stone">当前余额：</span>
+          <span className={balance >= totalPrice ? 'text-ink font-medium' : 'text-[#ff4d4f] font-medium'}>
+            ¥{balance.toFixed(2)}
+          </span>
+          {balance < totalPrice && (
+            <span className="text-[#ff4d4f] ml-3">余额不足，请先充值</span>
+          )}
+        </div>
         <div className="mt-4">
           <p className="text-light-ink text-sm mb-2">支付密码（Mock 默认 123456）</p>
           <Input.Password
@@ -131,7 +157,7 @@ function OrderPage() {
       {/* 支付按钮 */}
       <button
         onClick={handlePay}
-        disabled={paying}
+        disabled={paying || balance < totalPrice}
         className="w-full bg-gold text-white py-3 rounded-sm font-medium text-lg
                    hover:bg-[#B8944F] transition-soft cursor-pointer
                    disabled:opacity-50 disabled:cursor-not-allowed"

@@ -86,6 +86,18 @@ CREATE TABLE customers (
   UNIQUE KEY uk_customer_username (username)
 );
 
+CREATE TABLE customer_recharges (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  customer_id BIGINT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  balance_after DECIMAL(10,2) NOT NULL,
+  recharge_time DATETIME NOT NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  KEY idx_recharge_customer_time (customer_id, recharge_time),
+  CONSTRAINT fk_recharge_customer FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
 CREATE TABLE employees (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   employee_no VARCHAR(20) NOT NULL,

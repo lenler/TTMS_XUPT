@@ -32,7 +32,7 @@ interface CustomerRegisterParams {
 }
 
 /** 个人信息 */
-interface CustomerProfile {
+export interface CustomerProfile {
   id: number;
   name: string;
   gender: number;
@@ -40,6 +40,8 @@ interface CustomerProfile {
   email: string;
   username: string;
   balance: number;
+  rechargeTotal?: number;
+  rechargeCount?: number;
   status: number;
 }
 
@@ -62,6 +64,16 @@ export function customerRegister(data: CustomerRegisterParams): Promise<ApiRespo
 /** 获取个人信息 */
 export function getProfile(): Promise<ApiResponse<CustomerProfile>> {
   return request.get('/customer/api/profile');
+}
+
+/** 余额充值 */
+export function rechargeWallet(amount: number): Promise<ApiResponse<{
+  amount: number;
+  balance: number;
+  rechargeTotal: number;
+  rechargeCount: number;
+}>> {
+  return request.post('/customer/api/wallet/recharge', { amount });
 }
 
 /** 修改个人信息 */

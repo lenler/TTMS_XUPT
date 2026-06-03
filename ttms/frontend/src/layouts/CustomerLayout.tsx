@@ -75,6 +75,12 @@ function CustomerLayout() {
                   <UserOutlined /> 我的订单
                 </Link>
                 <Link
+                  to="/wallet"
+                  className="text-stone hover:text-ink transition-soft"
+                >
+                  余额
+                </Link>
+                <Link
                   to="/login"
                   onClick={() => localStorage.removeItem('customerToken')}
                   className="border border-warm text-stone hover:text-ink hover:border-ink px-4 py-1.5 rounded-sm transition-soft"

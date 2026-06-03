@@ -26,6 +26,7 @@ import com.hantang.ttms.dto.ScheduleRequest;
 import com.hantang.ttms.dto.ScheduleResponse;
 import com.hantang.ttms.dto.UserResponse;
 import com.hantang.ttms.repository.CustomerRepository;
+import com.hantang.ttms.repository.CustomerRechargeRepository;
 import com.hantang.ttms.repository.PlayRepository;
 import com.hantang.ttms.repository.ScheduleRepository;
 import com.hantang.ttms.repository.StudioRepository;
@@ -45,6 +46,7 @@ public class AdminCatalogCompatController {
     private final PlayRepository playRepository;
     private final TicketRepository ticketRepository;
     private final CustomerRepository customerRepository;
+    private final CustomerRechargeRepository rechargeRepository;
 
     public AdminCatalogCompatController(
         ScheduleService scheduleService,
@@ -53,7 +55,8 @@ public class AdminCatalogCompatController {
         StudioRepository studioRepository,
         PlayRepository playRepository,
         TicketRepository ticketRepository,
-        CustomerRepository customerRepository
+        CustomerRepository customerRepository,
+        CustomerRechargeRepository rechargeRepository
     ) {
         this.scheduleService = scheduleService;
         this.userService = userService;
@@ -62,6 +65,7 @@ public class AdminCatalogCompatController {
         this.playRepository = playRepository;
         this.ticketRepository = ticketRepository;
         this.customerRepository = customerRepository;
+        this.rechargeRepository = rechargeRepository;
     }
 
     @GetMapping("/schedules")
@@ -184,6 +188,8 @@ public class AdminCatalogCompatController {
             customer.email(),
             customer.username(),
             customer.balance(),
+            rechargeRepository.sumAmountByCustomerId(customer.id()),
+            rechargeRepository.countByCustomerId(customer.id()),
             statusCode(customer.status())
         );
     }

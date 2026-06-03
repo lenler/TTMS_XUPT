@@ -9,9 +9,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.hantang.ttms.common.BusinessException;
 import com.hantang.ttms.domain.Customer;
+import com.hantang.ttms.domain.CustomerRecharge;
 import com.hantang.ttms.domain.Play;
 import com.hantang.ttms.domain.SaleStatus;
 import com.hantang.ttms.domain.Studio;
@@ -28,6 +30,7 @@ import com.hantang.ttms.dto.SaleResponse;
 import com.hantang.ttms.dto.ScheduleResponse;
 import com.hantang.ttms.dto.TicketResponse;
 import com.hantang.ttms.repository.CustomerRepository;
+import com.hantang.ttms.repository.CustomerRechargeRepository;
 import com.hantang.ttms.repository.PlayRepository;
 import com.hantang.ttms.repository.SeatRepository;
 import com.hantang.ttms.repository.StudioRepository;
@@ -54,6 +57,7 @@ public class CustomerCompatController {
     private final TicketRepository ticketRepository;
     private final SeatRepository seatRepository;
     private final CustomerRepository customerRepository;
+    private final CustomerRechargeRepository rechargeRepository;
     private final StudioRepository studioRepository;
     private final PlayRepository playRepository;
 
@@ -70,6 +74,7 @@ public class CustomerCompatController {
         TicketRepository ticketRepository,
         SeatRepository seatRepository,
         CustomerRepository customerRepository,
+        CustomerRechargeRepository rechargeRepository,
         StudioRepository studioRepository,
         PlayRepository playRepository
     ) {
@@ -81,6 +86,7 @@ public class CustomerCompatController {
         this.ticketRepository = ticketRepository;
         this.seatRepository = seatRepository;
         this.customerRepository = customerRepository;
+        this.rechargeRepository = rechargeRepository;
         this.studioRepository = studioRepository;
         this.playRepository = playRepository;
     }
@@ -173,16 +179,50 @@ public class CustomerCompatController {
 
     /** 获取个人信息（简化：总是返回当前观众） */
     @GetMapping("/profile")
-    public AdminApiResponse<Map<String, Object>> profile() {
+    public AdminApiResponse<Map<String, Object>> profile(
+        @RequestHeader(value = "Authorization", required = false) String authorization
+    ) {
+        Customer customer = currentCustomer(authorization);
         return AdminApiResponse.ok(Map.of(
-            "id", 1,
-            "name", "示例观众",
-            "gender", 0,
-            "phone", "13800000000",
-            "email", "",
-            "username", "customer01",
-            "balance", 0,
-            "status", 1
+            "id", customer.getId(),
+            "name", customer.getName() != null ? customer.getName() : "",
+            "gender", customer.getGender() != null ? customer.getGender() : 0,
+            "phone", customer.getPhone() != null ? customer.getPhone() : "",
+            "email", customer.getEmail() != null ? customer.getEmail() : "",
+            "username", customer.getUsername(),
+            "balance", customer.getBalance(),
+            "rechargeTotal", rechargeRepository.sumAmountByCustomerId(customer.getId()),
+            "rechargeCount", rechargeRepository.countByCustomerId(customer.getId()),
+            "status", customer.getStatus() == Status.ACTIVE ? 1 : 0
+        ));
+    }
+
+    /** 余额充值 */
+    @PostMapping("/wallet/recharge")
+    @Transactional
+    public AdminApiResponse<Map<String, Object>> recharge(
+        @RequestHeader(value = "Authorization", required = false) String authorization,
+        @RequestBody Map<String, Object> body
+    ) {
+        Customer customer = currentCustomer(authorization);
+        BigDecimal amount = new BigDecimal(String.valueOf(body.getOrDefault("amount", "0")));
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("充值金额必须大于0");
+        }
+        customer.setBalance(customer.getBalance().add(amount));
+        customerRepository.save(customer);
+
+        CustomerRecharge recharge = new CustomerRecharge();
+        recharge.setCustomerId(customer.getId());
+        recharge.setAmount(amount);
+        recharge.setBalanceAfter(customer.getBalance());
+        rechargeRepository.insert(recharge);
+
+        return AdminApiResponse.ok(Map.of(
+            "amount", amount,
+            "balance", customer.getBalance(),
+            "rechargeTotal", rechargeRepository.sumAmountByCustomerId(customer.getId()),
+            "rechargeCount", rechargeRepository.countByCustomerId(customer.getId())
         ));
     }
 
@@ -342,7 +382,10 @@ public class CustomerCompatController {
 
     /** 下单 */
     @PostMapping("/orders")
-    public AdminApiResponse<Map<String, Object>> createOrder(@RequestBody Map<String, Object> body) {
+    public AdminApiResponse<Map<String, Object>> createOrder(
+        @RequestHeader(value = "Authorization", required = false) String authorization,
+        @RequestBody Map<String, Object> body
+    ) {
         String lockToken = (String) body.get("lockToken");
         LockSession session = lockSessions.get(lockToken);
         if (session == null) {
@@ -350,6 +393,15 @@ public class CustomerCompatController {
         }
 
         List<Long> ticketIds = session.tickets.stream().map(Ticket::getId).toList();
+        BigDecimal totalPrice = session.tickets.stream()
+            .map(Ticket::getPrice)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Customer customer = currentCustomer(authorization);
+        if (customer.getBalance().compareTo(totalPrice) < 0) {
+            releaseLockSession(lockToken, session);
+            throw new BusinessException("余额不足，请先充值");
+        }
+
         // 先将锁定的票恢复为可用（placeOrder 内部会重新锁定并创建订单）
         for (Ticket t : session.tickets) {
             t.setStatus(TicketStatus.AVAILABLE);
@@ -357,7 +409,7 @@ public class CustomerCompatController {
             ticketRepository.save(t);
         }
         SaleResponse order = saleService.placeOrder(
-            new OrderRequest(1L /* 默认 customerId=1 */, null, ticketIds)
+            new OrderRequest(customer.getId(), null, ticketIds)
         );
 
         return AdminApiResponse.ok(Map.of(
@@ -370,8 +422,10 @@ public class CustomerCompatController {
 
     /** 支付 */
     @PostMapping("/orders/{id}/pay")
+    @Transactional
     public AdminApiResponse<Map<String, Object>> payOrder(
         @PathVariable Long id,
+        @RequestHeader(value = "Authorization", required = false) String authorization,
         @RequestBody Map<String, Object> body
     ) {
         // 前端发送 paymentMethod 和 paymentPassword，后端计算应付金额
@@ -382,13 +436,26 @@ public class CustomerCompatController {
             ? body.get("paymentPassword").toString()
             : "";
 
-        // 余额支付时校验支付密码（默认 123456）
-        if ("balance".equals(paymentMethod) && !"123456".equals(paymentPassword)) {
+        Customer customer = currentCustomer(authorization);
+        String expectedPaymentPassword = customer.getPaymentPassword() == null || customer.getPaymentPassword().isBlank()
+            ? "123456"
+            : customer.getPaymentPassword();
+
+        // 余额支付时校验支付密码
+        if ("balance".equals(paymentMethod) && !expectedPaymentPassword.equals(paymentPassword)) {
             throw new BusinessException("20005", "支付密码错误");
         }
 
         // 全额支付
         SaleResponse sale = saleService.get(id);
+        if (sale.customerId() != null && !sale.customerId().equals(customer.getId())) {
+            throw new BusinessException("订单不属于当前用户");
+        }
+        if (customer.getBalance().compareTo(sale.totalAmount()) < 0) {
+            throw new BusinessException("余额不足，请先充值");
+        }
+        customer.setBalance(customer.getBalance().subtract(sale.totalAmount()));
+        customerRepository.save(customer);
         SaleResponse paid = saleService.makePayment(id, sale.totalAmount());
 
         List<Map<String, Object>> paidTickets = paid.tickets().stream()
@@ -407,6 +474,7 @@ public class CustomerCompatController {
         return AdminApiResponse.ok(Map.of(
             "orderId", paid.id(),
             "orderStatus", "PAID",
+            "balance", customer.getBalance(),
             "tickets", paidTickets
         ));
     }
@@ -421,11 +489,13 @@ public class CustomerCompatController {
     /** 查询我的订单列表 */
     @GetMapping("/orders")
     public AdminApiResponse<AdminPageData<Map<String, Object>>> getMyOrders(
+        @RequestHeader(value = "Authorization", required = false) String authorization,
         @RequestParam(required = false) String status,
         @RequestParam(required = false, defaultValue = "1") int page,
         @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
-        List<SaleResponse> sales = saleService.list(null, null, 1L);
+        Customer customer = currentCustomer(authorization);
+        List<SaleResponse> sales = saleService.list(null, null, customer.getId());
         List<Map<String, Object>> items = sales.stream()
             .filter(s -> status == null || status.isEmpty() || s.status().name().equalsIgnoreCase(status))
             .map(s -> {
@@ -548,6 +618,33 @@ public class CustomerCompatController {
         item.put("ticketPrice", s.ticketPrice());
         item.put("availableSeats", s.availableTickets());
         return item;
+    }
+
+    private Customer currentCustomer(String authorization) {
+        Long id = parseCustomerId(authorization);
+        return customerRepository.findById(id)
+            .orElseThrow(() -> new BusinessException("请先登录观众账号"));
+    }
+
+    private Long parseCustomerId(String authorization) {
+        if (authorization != null && authorization.startsWith("Bearer customer-token-")) {
+            String rawId = authorization.substring("Bearer customer-token-".length());
+            try {
+                return Long.valueOf(rawId);
+            } catch (NumberFormatException ignored) {
+                throw new BusinessException("登录状态无效，请重新登录");
+            }
+        }
+        return 1L;
+    }
+
+    private void releaseLockSession(String lockToken, LockSession session) {
+        for (Ticket ticket : session.tickets) {
+            ticket.setStatus(TicketStatus.AVAILABLE);
+            ticket.setLockTime(null);
+            ticketRepository.save(ticket);
+        }
+        lockSessions.remove(lockToken);
     }
 
     /** 锁座会话 */

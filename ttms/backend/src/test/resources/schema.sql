@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS seats;
 DROP TABLE IF EXISTS plays;
 DROP TABLE IF EXISTS studios;
 DROP TABLE IF EXISTS employees;
+DROP TABLE IF EXISTS customer_recharges;
 DROP TABLE IF EXISTS customers;
 
 CREATE TABLE studios (
@@ -92,6 +93,17 @@ CREATE TABLE customers (
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL,
   CONSTRAINT uk_customer_username UNIQUE (username)
+);
+
+CREATE TABLE customer_recharges (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  customer_id BIGINT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  balance_after DECIMAL(10,2) NOT NULL,
+  recharge_time DATETIME NOT NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  CONSTRAINT fk_recharge_customer FOREIGN KEY (customer_id) REFERENCES customers(id)
 );
 
 CREATE TABLE employees (

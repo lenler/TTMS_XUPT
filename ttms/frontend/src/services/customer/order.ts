@@ -56,6 +56,7 @@ interface PaidTicket {
 interface PayResult {
   orderId: number;
   orderStatus: string;
+  balance?: number;
   tickets: PaidTicket[];
 }
 

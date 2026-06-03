@@ -27,7 +27,21 @@ const columns = [
     dataIndex: 'balance',
     key: 'balance',
     width: 100,
-    render: (v: number) => `¥${v.toFixed(2)}`,
+    render: (v: number) => `¥${(v ?? 0).toFixed(2)}`,
+  },
+  {
+    title: '累计充值',
+    dataIndex: 'rechargeTotal',
+    key: 'rechargeTotal',
+    width: 110,
+    render: (v: number) => `¥${(v ?? 0).toFixed(2)}`,
+  },
+  {
+    title: '充值次数',
+    dataIndex: 'rechargeCount',
+    key: 'rechargeCount',
+    width: 90,
+    render: (v: number) => `${v ?? 0}次`,
   },
   {
     title: '状态',
@@ -117,7 +131,13 @@ function CustomerListPage() {
             <Descriptions.Item label="邮箱">{viewCustomer.email}</Descriptions.Item>
             <Descriptions.Item label="用户名">{viewCustomer.username}</Descriptions.Item>
             <Descriptions.Item label="账户余额">
-              ¥{viewCustomer.balance.toFixed(2)}
+              ¥{(viewCustomer.balance ?? 0).toFixed(2)}
+            </Descriptions.Item>
+            <Descriptions.Item label="累计充值">
+              ¥{(viewCustomer.rechargeTotal ?? 0).toFixed(2)}
+            </Descriptions.Item>
+            <Descriptions.Item label="充值次数">
+              {viewCustomer.rechargeCount ?? 0}次
             </Descriptions.Item>
             <Descriptions.Item label="状态">
               <StatusTag status={viewCustomer.status} />

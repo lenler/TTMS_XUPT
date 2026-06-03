@@ -88,7 +88,7 @@ public class AdminFinanceCompatController {
         double avgOccupancy = totalTickets > 0 ? (double) soldCount / totalTickets : 0;
 
         // 热卖剧目
-        Map<String, Object> topPlay = null;
+        Map<String, Object> topPlay = Map.of();
         BigDecimal maxSales = BigDecimal.ZERO;
         for (var entry : playSales.entrySet()) {
             if (entry.getValue().compareTo(maxSales) > 0) {

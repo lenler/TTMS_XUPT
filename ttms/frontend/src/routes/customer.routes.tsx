@@ -11,6 +11,7 @@ const SeatsPage = lazy(() => import('@/pages/customer/Seats'));
 const OrderPage = lazy(() => import('@/pages/customer/Order'));
 const ResultPage = lazy(() => import('@/pages/customer/Result'));
 const OrdersPage = lazy(() => import('@/pages/customer/Orders'));
+const WalletPage = lazy(() => import('@/pages/customer/Wallet'));
 const BoardPage = lazy(() => import('@/pages/customer/Board'));
 const ContactPage = lazy(() => import('@/pages/customer/Contact'));
 const CustomerLoginPage = lazy(() => import('@/pages/customer/Login'));
@@ -35,6 +36,7 @@ const customerRoutes: RouteObject[] = [
           { path: 'order', element: <OrderPage /> },
           { path: 'result/:orderId', element: <ResultPage /> },
           { path: 'orders', element: <OrdersPage /> },
+          { path: 'wallet', element: <WalletPage /> },
         ],
       },
     ],

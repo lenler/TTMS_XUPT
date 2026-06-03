@@ -10,5 +10,7 @@ public record AdminCustomerView(
     String email,
     String username,
     BigDecimal balance,
+    BigDecimal rechargeTotal,
+    long rechargeCount,
     int status
 ) {}
