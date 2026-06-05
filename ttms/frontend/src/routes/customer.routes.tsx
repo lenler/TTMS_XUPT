@@ -12,6 +12,7 @@ const OrderPage = lazy(() => import('@/pages/customer/Order'));
 const ResultPage = lazy(() => import('@/pages/customer/Result'));
 const OrdersPage = lazy(() => import('@/pages/customer/Orders'));
 const WalletPage = lazy(() => import('@/pages/customer/Wallet'));
+const ProfilePage = lazy(() => import('@/pages/customer/Profile'));
 const BoardPage = lazy(() => import('@/pages/customer/Board'));
 const ContactPage = lazy(() => import('@/pages/customer/Contact'));
 const CustomerLoginPage = lazy(() => import('@/pages/customer/Login'));
@@ -28,6 +29,7 @@ const customerRoutes: RouteObject[] = [
       { path: 'contact', element: <ContactPage /> },
       { path: 'login', element: <CustomerLoginPage /> },
       { path: 'register', element: <RegisterPage /> },
+      { path: 'profile', element: <ProfilePage /> },
       // 需要登录才能访问（购票流程 + 我的订单）
       {
         element: <CustomerGuard />,

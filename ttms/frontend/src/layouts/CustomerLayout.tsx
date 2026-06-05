@@ -69,16 +69,10 @@ function CustomerLayout() {
             {customerToken ? (
               <>
                 <Link
-                  to="/orders"
+                  to="/profile"
                   className="text-stone hover:text-ink transition-soft flex items-center gap-1"
                 >
-                  <UserOutlined /> 我的订单
-                </Link>
-                <Link
-                  to="/wallet"
-                  className="text-stone hover:text-ink transition-soft"
-                >
-                  余额
+                  <UserOutlined /> 我的
                 </Link>
                 <Link
                   to="/login"
