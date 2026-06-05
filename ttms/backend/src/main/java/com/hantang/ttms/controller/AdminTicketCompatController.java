@@ -23,6 +23,7 @@ import com.hantang.ttms.dto.AdminRefundResult;
 import com.hantang.ttms.dto.AdminSaleItemView;
 import com.hantang.ttms.dto.AdminSaleView;
 import com.hantang.ttms.dto.AdminTicketView;
+import com.hantang.ttms.dto.AdminVerifyRequest;
 import com.hantang.ttms.dto.AdminVerifyResult;
 import com.hantang.ttms.dto.OrderRequest;
 import com.hantang.ttms.dto.SaleResponse;
