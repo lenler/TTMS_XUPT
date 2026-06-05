@@ -278,12 +278,36 @@ public class CustomerCompatController {
     /** 查询放映安排列表 */
     @GetMapping("/schedules")
     public AdminApiResponse<AdminPageData<Map<String, Object>>> listSchedules(
-        @RequestParam(required = false) Long playId,
+        @RequestParam(required = false) String keyword,
         @RequestParam(required = false) String date,
         @RequestParam(required = false, defaultValue = "1") int page,
         @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
-        List<ScheduleResponse> schedules = scheduleService.listPublic(playId);
+        List<ScheduleResponse> schedules = scheduleService.listPublic(null);
+        // 关键词搜索（剧目名称模糊匹配）
+        if (keyword != null && !keyword.isBlank()) {
+            schedules = schedules.stream()
+                .filter(s -> s.playName() != null && s.playName().contains(keyword))
+                .toList();
+        }
+        // 日期筛选（按 showTime 日期匹配）
+        if (date != null && !date.isBlank()) {
+            if ("week".equals(date)) {
+                // 本周：今天起 7 天内
+                java.time.LocalDate today = java.time.LocalDate.now();
+                java.time.LocalDate weekEnd = today.plusDays(7);
+                schedules = schedules.stream()
+                    .filter(s -> {
+                        java.time.LocalDate showDate = s.showTime().toLocalDate();
+                        return !showDate.isBefore(today) && showDate.isBefore(weekEnd);
+                    })
+                    .toList();
+            } else {
+                schedules = schedules.stream()
+                    .filter(s -> s.showTime().toLocalDate().toString().equals(date))
+                    .toList();
+            }
+        }
         List<Map<String, Object>> items = schedules.stream()
             .<Map<String, Object>>map(s -> scheduleToItem(s))
             .toList();

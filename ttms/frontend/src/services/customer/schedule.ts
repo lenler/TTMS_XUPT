@@ -51,7 +51,7 @@ interface ScheduleDetail {
 
 /** 查询放映安排列表 */
 export function getSchedules(
-  params: PageParams & { playId?: number; date?: string }
+  params: PageParams & { keyword?: string; date?: string }
 ): Promise<ApiResponse<PageData<ScheduleItem>>> {
   return request.get('/customer/api/schedules', { params });
 }

@@ -1,10 +1,10 @@
 // 放映安排列表页 —— 水墨留白 · 东方极简
-// 线性风格筛选栏 + 横向卡片布局
+// 搜索 + 日期筛选 + 横向卡片布局
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Typography, Spin, Empty, Tag } from 'antd';
-import { ClockCircleOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import { Input, Typography, Spin, Empty, Tag } from 'antd';
+import { ClockCircleOutlined, EnvironmentOutlined, SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getSchedules } from '@/services/customer/schedule';
 
@@ -23,14 +23,7 @@ const datePresets = [
   { label: '今天', value: dayjs().format('YYYY-MM-DD') },
   { label: '明天', value: dayjs().add(1, 'day').format('YYYY-MM-DD') },
   { label: '后天', value: dayjs().add(2, 'day').format('YYYY-MM-DD') },
-];
-
-const playOptions = [
-  { label: '全部剧目', value: undefined },
-  { label: '雷雨', value: 1 },
-  { label: '歌剧魅影', value: 2 },
-  { label: '红色娘子军', value: 3 },
-  { label: '茶馆', value: 4 },
+  { label: '本周', value: 'week' },
 ];
 
 /** 放映安排列表页 */
@@ -40,22 +33,22 @@ function SchedulePage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [date, setDate] = useState('');
-  const [playId, setPlayId] = useState<number | undefined>();
+  const [keyword, setKeyword] = useState('');
   const navigate = useNavigate();
   const pageSize = 9;
 
   const fetchData = () => {
     setLoading(true);
-    const params: { page: number; pageSize: number; date?: string; playId?: number } = { page, pageSize };
+    const params: { page: number; pageSize: number; keyword?: string; date?: string } = { page, pageSize };
+    if (keyword.trim()) params.keyword = keyword.trim();
     if (date) params.date = date;
-    if (playId) params.playId = playId;
     getSchedules(params)
       .then((res) => { setData(res.data.list); setTotal(res.data.total); })
       .catch(() => {})
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchData(); }, [page, date, playId]);
+  useEffect(() => { fetchData(); }, [page, date, keyword]);
 
   const totalPages = Math.ceil(total / pageSize);
 
@@ -64,8 +57,18 @@ function SchedulePage() {
       {/* 页标题 */}
       <h1 className="font-serif text-2xl text-ink tracking-wide mb-6">放映安排</h1>
 
-      {/* 筛选栏 —— 简洁按钮组 */}
+      {/* 筛选栏 —— 搜索 + 日期 */}
       <div className="flex flex-wrap items-center gap-4 mb-8">
+        {/* 搜索框 */}
+        <Input
+          placeholder="搜索剧目名称"
+          prefix={<SearchOutlined className="text-light-ink" />}
+          value={keyword}
+          onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
+          allowClear
+          className="max-w-xs"
+        />
+
         {/* 日期快捷按钮 */}
         <div className="flex items-center border border-warm rounded-sm overflow-hidden">
           {datePresets.map((p) => (
@@ -74,20 +77,6 @@ function SchedulePage() {
               onClick={() => { setDate(p.value); setPage(1); }}
               className={`px-4 py-1.5 text-sm transition-soft cursor-pointer border-r border-warm last:border-r-0
                 ${date === p.value ? 'bg-ink text-white' : 'text-stone hover:bg-cream'}`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-
-        {/* 剧目选择 */}
-        <div className="flex items-center border border-warm rounded-sm overflow-hidden">
-          {playOptions.map((p) => (
-            <button
-              key={String(p.value ?? 'all')}
-              onClick={() => { setPlayId(p.value); setPage(1); }}
-              className={`px-4 py-1.5 text-sm transition-soft cursor-pointer border-r border-warm last:border-r-0
-                ${playId === p.value ? 'bg-ink text-white' : 'text-stone hover:bg-cream'}`}
             >
               {p.label}
             </button>
@@ -147,7 +136,7 @@ function SchedulePage() {
         </div>
       </Spin>
 
-      {/* 分页 —— 简洁文字链接 */}
+      {/* 分页 */}
       {total > pageSize && (
         <div className="flex items-center justify-center gap-6 mt-10 text-sm">
           {page > 1 ? (
