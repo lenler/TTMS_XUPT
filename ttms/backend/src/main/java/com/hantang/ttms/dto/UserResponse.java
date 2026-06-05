@@ -12,6 +12,7 @@ public record UserResponse(
     String position,
     String phone,
     String email,
+    Integer gender,
     BigDecimal balance,
     Status status
 ) {}

@@ -7,6 +7,22 @@ import playsData from '../data/plays.json';
 import studiosData from '../data/studios.json';
 import customersData from '../data/customers.json';
 
+/** 从请求 Authorization header 提取观众 customerId，未登录返回 null */
+function getCustomerIdFromRequest(req: Request): number | null {
+  const auth = req.headers.get('Authorization') || '';
+  const match = auth.match(/^Bearer customer-token-(\d+)-/);
+  return match ? Number(match[1]) : null;
+}
+
+/** 校验观众登录态，未登录返回 20002 响应 */
+function requireCustomerAuth(req: Request) {
+  const cid = getCustomerIdFromRequest(req);
+  if (cid === null) {
+    return HttpResponse.json({ resCode: '20002', resMsg: '未登录，请先登录', data: null });
+  }
+  return cid;
+}
+
 interface ScheduleData {
   id: number; playId: number; studioId: number; showTime: string; ticketPrice: number;
   playName?: string; studioName?: string;
@@ -191,6 +207,8 @@ export const orderHandlers = [
   // ======================== 锁座 ========================
   http.post('/customer/api/orders/lock', async ({ request }) => {
     clearExpiredLocks();
+    const auth = requireCustomerAuth(request);
+    if (auth instanceof HttpResponse) return auth;
     const body = (await request.json()) as { scheduleId: number; seatIds: number[] };
 
     if (!body.seatIds || body.seatIds.length === 0) {
@@ -245,6 +263,9 @@ export const orderHandlers = [
   // ======================== 下单 ========================
   http.post('/customer/api/orders', async ({ request }) => {
     clearExpiredLocks();
+    const auth = requireCustomerAuth(request);
+    if (auth instanceof HttpResponse) return auth;
+    const customerId = auth;
     const body = (await request.json()) as { lockToken: string };
 
     const lock = locks[body.lockToken];
@@ -265,16 +286,6 @@ export const orderHandlers = [
     const s = getScheduleById(lock.scheduleId);
     const play = s ? getPlayById(s.playId) : null;
     const totalPrice = lockTickets.reduce((sum, t) => sum + t.price, 0);
-
-    // 从 localStorage 读取当前登录观众 ID（注册/登录时已存入 customerInfo）
-    let customerId = 1;
-    try {
-      const infoStr = localStorage.getItem('customerInfo');
-      if (infoStr) {
-        const info = JSON.parse(infoStr);
-        customerId = info.id || 1;
-      }
-    } catch { /* 解析失败用默认值 */ }
 
     const orderId = orderNextId++;
     const newOrder: CustomerOrder = {
@@ -303,6 +314,8 @@ export const orderHandlers = [
 
   // ======================== 支付 ========================
   http.post('/customer/api/orders/:id/pay', async ({ request, params }) => {
+    const auth = requireCustomerAuth(request);
+    if (auth instanceof HttpResponse) return auth;
     const order = customerOrders.find((o) => o.orderId === Number(params.id));
     if (!order) return HttpResponse.json({ resCode: '20004', resMsg: '订单不存在', data: null });
     if (order.status !== 'unpaid') {
@@ -368,12 +381,15 @@ export const orderHandlers = [
   }),
 
   http.get('/customer/api/orders', ({ request }) => {
+    const auth = requireCustomerAuth(request);
+    if (auth instanceof HttpResponse) return auth;
+    const customerId = auth;
     const url = new URL(request.url);
     const status = url.searchParams.get('status') || '';
     const page = Number(url.searchParams.get('page')) || 1;
     const pageSize = Number(url.searchParams.get('pageSize')) || 10;
 
-    let filtered = customerOrders;
+    let filtered = customerOrders.filter((o) => o.customerId === customerId);
     if (status) filtered = filtered.filter((o) => o.status === status);
 
     const start = (page - 1) * pageSize;
@@ -392,6 +408,8 @@ export const orderHandlers = [
 
   // ======================== 退票 ========================
   http.post('/customer/api/orders/:id/refund', async ({ request, params }) => {
+    const auth = requireCustomerAuth(request);
+    if (auth instanceof HttpResponse) return auth;
     const order = customerOrders.find((o) => o.orderId === Number(params.id));
     if (!order) return HttpResponse.json({ resCode: '20004', resMsg: '订单不存在', data: null });
     if (order.status !== 'paid') {

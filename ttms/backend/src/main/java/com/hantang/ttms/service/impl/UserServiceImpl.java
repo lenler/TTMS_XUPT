@@ -128,6 +128,7 @@ public class UserServiceImpl implements UserService {
             employee.getPhone(),
             employee.getEmail(),
             null,
+            null,
             employee.getStatus()
         );
     }
@@ -141,6 +142,7 @@ public class UserServiceImpl implements UserService {
             null,
             customer.getPhone(),
             customer.getEmail(),
+            customer.getGender(),
             customer.getBalance(),
             customer.getStatus()
         );

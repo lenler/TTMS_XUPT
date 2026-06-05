@@ -3,6 +3,7 @@
 import { http, HttpResponse } from 'msw';
 import { ticketsStore } from './schedule';
 import schedulesData from '../data/schedules.json';
+import employeesData from '../data/employees.json';
 import playsData from '../data/plays.json';
 import studiosData from '../data/studios.json';
 
@@ -47,8 +48,21 @@ export const checkHandlers = [
   }),
 
   /** 验票 */
-  http.post('/admin/api/tickets/:ticketId/verify', async ({ params }) => {
+  http.post('/admin/api/tickets/:ticketId/verify', async ({ request, params }) => {
     const ticketId = Number(params.ticketId);
+
+    // 读取操作员 ID，查找对应员工姓名
+    let operatorName = '未知';
+    try {
+      const body = (await request.clone().json()) as { operatorId?: number };
+      if (body.operatorId) {
+        const emp = (employeesData as { id: number; name: string }[]).find(
+          (e) => e.id === body.operatorId
+        );
+        if (emp) operatorName = emp.name;
+      }
+    } catch { /* 无请求体则不处理 */ }
+
     const ticket = ticketsStore.find((t) => t.ticketId === ticketId);
 
     if (!ticket) {
@@ -61,7 +75,7 @@ export const checkHandlers = [
         studioName: '',
         showTime: '',
         verifyTime: new Date().toISOString().replace('T', ' ').slice(0, 19),
-        operatorName: '当前场务员',
+        operatorName,
         result: 'rejected',
         message: '票不存在',
       };
@@ -83,7 +97,7 @@ export const checkHandlers = [
         studioName: '',
         showTime: '',
         verifyTime: new Date().toISOString().replace('T', ' ').slice(0, 19),
-        operatorName: '当前场务员',
+        operatorName,
         result: 'rejected',
         message: `票状态异常，当前不可验（状态: ${ticket.status}）`,
       };
@@ -122,7 +136,7 @@ export const checkHandlers = [
       studioName: (studio?.name as string) || '未知',
       showTime: (schedule?.showTime as string) || '',
       verifyTime: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      operatorName: '当前场务员',
+      operatorName,
       result: 'passed',
       message: '验票通过',
     };

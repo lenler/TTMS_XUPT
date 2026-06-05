@@ -130,14 +130,24 @@ public class AdminTicketCompatController {
     }
 
     @PostMapping("/tickets/{ticketId}/verify")
-    public AdminApiResponse<AdminVerifyResult> verifyTicket(@PathVariable Long ticketId) {
+    public AdminApiResponse<AdminVerifyResult> verifyTicket(
+        @PathVariable Long ticketId,
+        @RequestBody(required = false) AdminVerifyRequest body
+    ) {
         TicketResponse checked = ticketService.checkIn(ticketId);
         // 从 Repository 查询完整票据信息（含排期→剧目→演出厅）
         Ticket ticket = ticketRepository.findDetailedById(ticketId).orElse(null);
+        // 读取操作员ID，查数据库获取姓名
+        String operatorName = "系统管理员";
+        if (body != null && body.operatorId() != null) {
+            operatorName = employeeRepository.findById(body.operatorId().longValue())
+                .map(e -> e.getName())
+                .orElse("系统管理员");
+        }
         AdminVerifyResult result = toVerifyResult(checked, ticket, "验票通过");
         // 存入内存验票记录
         if (ticket != null) {
-            checkRecords.add(toCheckRecord(ticket, result.showTime()));
+            checkRecords.add(toCheckRecord(ticket, result.showTime(), operatorName));
         }
         return AdminApiResponse.ok(result);
     }
@@ -219,7 +229,7 @@ public class AdminTicketCompatController {
     }
 
     /** 将已验票的票据转为验票记录 */
-    private AdminCheckRecord toCheckRecord(Ticket ticket, LocalDateTime verifyTime) {
+    private AdminCheckRecord toCheckRecord(Ticket ticket, LocalDateTime verifyTime, String operator) {
         String playName = ticket.getSchedule() != null && ticket.getSchedule().getPlay() != null
             ? ticket.getSchedule().getPlay().getName() : "";
         String studioName = ticket.getSchedule() != null && ticket.getSchedule().getStudio() != null
@@ -233,7 +243,7 @@ public class AdminTicketCompatController {
             studioName,
             ticket.getSchedule() != null ? ticket.getSchedule().getShowTime() : verifyTime,
             verifyTime,
-            "系统管理员",   // 操作员
+            operator,      // 操作员姓名
             "通过"          // 验票结果
         );
     }

@@ -226,15 +226,50 @@ public class CustomerCompatController {
         ));
     }
 
-    /** 修改个人信息（桩） */
+    /** 修改个人信息 */
     @PutMapping("/profile")
-    public AdminApiResponse<Void> updateProfile(@RequestBody Map<String, Object> body) {
+    @Transactional
+    public AdminApiResponse<Void> updateProfile(
+        @RequestHeader(value = "Authorization", required = false) String authorization,
+        @RequestBody Map<String, Object> body
+    ) {
+        Customer customer = currentCustomer(authorization);
+        if (body.containsKey("name")) {
+            customer.setName((String) body.get("name"));
+        }
+        if (body.containsKey("gender")) {
+            Object genderObj = body.get("gender");
+            customer.setGender(genderObj instanceof Number n ? n.intValue() : customer.getGender());
+        }
+        if (body.containsKey("phone")) {
+            customer.setPhone((String) body.get("phone"));
+        }
+        if (body.containsKey("email")) {
+            customer.setEmail((String) body.get("email"));
+        }
+        customerRepository.save(customer);
         return AdminApiResponse.ok(null);
     }
 
-    /** 修改密码（桩） */
+    /** 修改密码 */
     @PutMapping("/profile/password")
-    public AdminApiResponse<Void> changePassword(@RequestBody Map<String, Object> body) {
+    @Transactional
+    public AdminApiResponse<Void> changePassword(
+        @RequestHeader(value = "Authorization", required = false) String authorization,
+        @RequestBody Map<String, Object> body
+    ) {
+        Customer customer = currentCustomer(authorization);
+        String oldPassword = (String) body.get("oldPassword");
+        String newPassword = (String) body.get("newPassword");
+        if (oldPassword == null || newPassword == null) {
+            throw new BusinessException("新旧密码不能为空");
+        }
+        // 联调阶段明文比对
+        if (!oldPassword.equals(customer.getPasswordHash())) {
+            throw new BusinessException("原密码错误");
+        }
+        customer.setPasswordHash(newPassword);
+        customerRepository.save(customer);
         return AdminApiResponse.ok(null);
     }
 
@@ -458,14 +493,29 @@ public class CustomerCompatController {
         customerRepository.save(customer);
         SaleResponse paid = saleService.makePayment(id, sale.totalAmount());
 
+        // 从第一张票获取排期关联的剧目/演出厅/演出时间
+        String payPlayName = "", payStudioName = "", payShowTime = "";
+        if (!paid.tickets().isEmpty()) {
+            Ticket firstTicket = ticketRepository.findDetailedById(paid.tickets().get(0).id()).orElse(null);
+            if (firstTicket != null && firstTicket.getSchedule() != null) {
+                payShowTime = firstTicket.getSchedule().getShowTime().toString();
+                if (firstTicket.getSchedule().getPlay() != null) {
+                    payPlayName = firstTicket.getSchedule().getPlay().getName();
+                }
+                if (firstTicket.getSchedule().getStudio() != null) {
+                    payStudioName = firstTicket.getSchedule().getStudio().getName();
+                }
+            }
+        }
+        final String playName = payPlayName, studioName = payStudioName, showTime = payShowTime;
         List<Map<String, Object>> paidTickets = paid.tickets().stream()
             .map(t -> Map.<String, Object>of(
                 "ticketId", t.id(),
                 "seatRow", t.rowNo(),
                 "seatCol", t.colNo(),
-                "playName", "",
-                "studioName", "",
-                "showTime", "",
+                "playName", playName,
+                "studioName", studioName,
+                "showTime", showTime,
                 "price", t.price(),
                 "ticketStatus", "SOLD"
             ))
@@ -585,14 +635,29 @@ public class CustomerCompatController {
     }
 
     private Map<String, Object> orderToResult(SaleResponse sale) {
+        // 从第一张票获取排期关联信息
+        String detailPlayName = "", detailStudioName = "", detailShowTime = "";
+        if (!sale.tickets().isEmpty()) {
+            Ticket firstTicket = ticketRepository.findDetailedById(sale.tickets().get(0).id()).orElse(null);
+            if (firstTicket != null && firstTicket.getSchedule() != null) {
+                detailShowTime = firstTicket.getSchedule().getShowTime().toString();
+                if (firstTicket.getSchedule().getPlay() != null) {
+                    detailPlayName = firstTicket.getSchedule().getPlay().getName();
+                }
+                if (firstTicket.getSchedule().getStudio() != null) {
+                    detailStudioName = firstTicket.getSchedule().getStudio().getName();
+                }
+            }
+        }
+        final String playName = detailPlayName, studioName = detailStudioName, showTime = detailShowTime;
         List<Map<String, Object>> tickets = sale.tickets().stream()
             .map(t -> Map.<String, Object>of(
                 "ticketId", t.id(),
                 "seatRow", t.rowNo(),
                 "seatCol", t.colNo(),
-                "playName", "",
-                "studioName", "",
-                "showTime", "",
+                "playName", playName,
+                "studioName", studioName,
+                "showTime", showTime,
                 "price", t.price(),
                 "ticketStatus", sale.status() == SaleStatus.PAID ? "SOLD" : "REFUNDED"
             ))
@@ -605,13 +670,25 @@ public class CustomerCompatController {
     }
 
     private Map<String, Object> scheduleToItem(ScheduleResponse s) {
+        // 查询真实剧目信息填充海报、类型、时长
+        String poster = "";
+        String playType = "";
+        Integer playDuration = 120;
+        if (s.playId() != null) {
+            Play play = playRepository.findById(s.playId()).orElse(null);
+            if (play != null) {
+                poster = play.getPosterUrl() != null ? play.getPosterUrl() : "";
+                playType = play.getType() != null ? play.getType() : "";
+                playDuration = play.getDurationMinutes();
+            }
+        }
         Map<String, Object> item = new HashMap<>();
         item.put("id", s.id());
         item.put("playId", s.playId());
         item.put("playName", s.playName());
-        item.put("playPoster", "");
-        item.put("playType", "");
-        item.put("playDuration", 120);
+        item.put("playPoster", poster);
+        item.put("playType", playType);
+        item.put("playDuration", playDuration);
         item.put("studioId", s.studioId());
         item.put("studioName", s.studioName());
         item.put("showTime", s.showTime().toString());

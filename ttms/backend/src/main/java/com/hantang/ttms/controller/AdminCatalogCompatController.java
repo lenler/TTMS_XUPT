@@ -183,7 +183,7 @@ public class AdminCatalogCompatController {
         return new AdminCustomerView(
             customer.id(),
             customer.name(),
-            0,
+            customer.gender() != null ? customer.gender() : 0,
             customer.phone(),
             customer.email(),
             customer.username(),
