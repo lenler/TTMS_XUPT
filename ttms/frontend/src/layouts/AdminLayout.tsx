@@ -1,4 +1,4 @@
-// 管理端 SaaS 布局（侧边菜单 + 顶栏用户信息 + 内容区 + 退出）
+// 管理端布局组件：侧边折叠菜单 + 顶栏用户信息 + 内容区 Outlet + 退出登录
 
 import { useState, useEffect, useMemo } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
@@ -16,6 +16,7 @@ import {
   UserOutlined,
   SafetyCertificateOutlined,
   BarChartOutlined,
+  InfoCircleOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
@@ -42,6 +43,7 @@ const iconMap: Record<string, React.ReactNode> = {
   '角色管理': <SafetyCertificateOutlined />,
   '财务管理': <BarChartOutlined />,
   '财务统计': <BarChartOutlined />,
+  '关于': <InfoCircleOutlined />,
 };
 
 /** 将 authStore 的 MenuItem 转为 antd Menu 的 items 格式 */
