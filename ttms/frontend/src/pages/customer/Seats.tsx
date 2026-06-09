@@ -6,7 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Typography, Spin, Empty, message } from 'antd';
 import { ClockCircleOutlined } from '@ant-design/icons';
 import { getScheduleById } from '@/services/customer/schedule';
-import { lockSeats, createOrder } from '@/services/customer/order';
+import { lockSeats, createOrder, payOrder } from '@/services/customer/order';
 import { useCartStore } from '@/stores/cartStore';
 
 const { Text } = Typography;
@@ -96,8 +96,12 @@ function SeatsPage() {
     const { lockToken } = useCartStore.getState();
     if (!lockToken) return;
     try {
-      const res = await createOrder({ lockToken });
-      navigate(`/order?orderId=${res.data.orderId}`, { replace: true });
+      const orderRes = await createOrder({ lockToken });
+      await payOrder(orderRes.data.orderId, {
+        paymentMethod: 'balance',
+        paymentPassword: '123456',
+      });
+      navigate(`/order?orderId=${orderRes.data.orderId}`, { replace: true });
     } catch { /* 错误已提示 */ }
   };
 

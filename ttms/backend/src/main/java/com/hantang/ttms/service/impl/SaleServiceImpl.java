@@ -133,8 +133,18 @@ public class SaleServiceImpl implements SaleService {
             ticket.setLockTime(null);
             ticketRepository.save(ticket);
         }
+        // 恢复客户余额
+        Long refundCustomerId = sale.getCustomerId();
+        if (refundCustomerId != null) {
+            Customer refundCustomer = customerRepository.findById(refundCustomerId).orElse(null);
+            if (refundCustomer != null) {
+                refundCustomer.setBalance(refundCustomer.getBalance().add(sale.getPaidAmount()));
+                customerRepository.save(refundCustomer);
+            }
+        }
         sale.setStatus(SaleStatus.REFUNDED);
-        return TicketMapper.toSaleResponse(saleRepository.save(sale));
+        saleRepository.save(sale);
+        return TicketMapper.toSaleResponse(sale);
     }
 
     @Override
