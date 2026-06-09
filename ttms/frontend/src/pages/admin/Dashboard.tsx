@@ -46,7 +46,7 @@ function DashboardPage() {
     <Spin spinning={loading}>
       <div>
         <Title level={3} style={{ marginBottom: 8 }}>工作台</Title>
-        <Text type="secondary">欢迎使用汉唐剧院票务管理系统，以下是经营概览</Text>
+        <Text type="secondary">欢迎使用奥斯卡剧院票务管理系统，以下是经营概览</Text>
 
         {/* 关键指标卡片 */}
         <Row gutter={[16, 16]} style={{ marginTop: 24, marginBottom: 24 }}>

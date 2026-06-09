@@ -42,7 +42,7 @@ function HomePage() {
       {/* ===== Hero 区域 ===== */}
       <section className="text-center py-16 mb-12">
         <h1 className="font-serif text-4xl md:text-5xl text-ink tracking-wider mb-4">
-          汉唐剧院
+          奥斯卡剧院
         </h1>
         <p className="text-stone text-lg mb-8 max-w-md mx-auto leading-relaxed">
           传承经典，演绎非凡。感受舞台艺术的永恒魅力。

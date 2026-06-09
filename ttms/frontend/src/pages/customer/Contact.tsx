@@ -12,7 +12,7 @@ function ContactPage() {
 
       {/* 剧院信息卡片 */}
       <div className="border border-warm bg-cream rounded-sm p-6 mb-6">
-        <h2 className="font-serif text-xl text-ink mb-6">汉唐剧院</h2>
+        <h2 className="font-serif text-xl text-ink mb-6">奥斯卡剧院</h2>
         <div className="space-y-5">
           <div className="flex items-start gap-4">
             <EnvironmentOutlined className="text-gold text-lg mt-0.5" />

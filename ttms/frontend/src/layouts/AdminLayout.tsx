@@ -168,7 +168,7 @@ function AdminLayout() {
             onClick={() => setCollapsed(!collapsed)}
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <span>汉唐剧院票务管理系统</span>
+            <span>奥斯卡剧院票务管理系统</span>
             {user && (
               <>
                 <span>
@@ -189,7 +189,7 @@ function AdminLayout() {
           <Outlet />
         </Content>
         <Footer style={{ textAlign: 'center', padding: '12px 50px' }}>
-          TTMS &copy; 2026 汉唐传媒有限公司
+          TTMS &copy; 2026 小麦
         </Footer>
       </Layout>
     </Layout>

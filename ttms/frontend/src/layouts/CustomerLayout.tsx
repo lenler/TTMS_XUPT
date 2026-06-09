@@ -37,7 +37,7 @@ function CustomerLayout() {
               to="/"
               className="font-serif text-xl tracking-widest text-ink hover:text-gold transition-soft whitespace-nowrap"
             >
-              汉唐剧院
+              奥斯卡剧院
             </Link>
 
             {/* 导航链接 — 当前页暗金下划线 */}
@@ -110,7 +110,7 @@ function CustomerLayout() {
       {/* ===== Footer ===== */}
       <footer className="border-t border-warm py-8 text-center">
         <p className="text-light-ink text-sm">
-          TTMS &copy; 2026 汉唐传媒有限公司 · 西安邮电大学软件工程系
+          TTMS &copy; 2026 小麦 · 西安邮电大学软件工程系
         </p>
       </footer>
     </div>

@@ -96,6 +96,9 @@ public interface TicketRepository {
     @Select("SELECT COUNT(*) FROM tickets")
     long count();
 
+    @Select("SELECT COALESCE(SUM(price), 0) FROM tickets WHERE schedule_id = #{scheduleId} AND status = #{status}")
+    java.math.BigDecimal sumPriceByScheduleIdAndStatus(@Param("scheduleId") Long scheduleId, @Param("status") TicketStatus status);
+
     @Insert("""
         INSERT INTO tickets (seat_id, schedule_id, price, status, lock_time, version, created_at, updated_at)
         VALUES (#{seat.id}, #{schedule.id}, #{price}, #{status}, #{lockTime}, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)

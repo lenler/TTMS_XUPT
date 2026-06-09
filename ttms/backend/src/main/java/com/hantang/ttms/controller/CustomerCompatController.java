@@ -99,15 +99,20 @@ public class CustomerCompatController {
         // 热卖剧目（取前4条）
         List<Map<String, Object>> hotPlays = playService.search(null).stream()
             .limit(4)
-            .map(p -> Map.<String, Object>of(
-                "id", p.getId(),
-                "name", p.getName(),
-                "poster", p.getPosterUrl() != null ? p.getPosterUrl() : "",
-                "typeName", p.getType(),
-                "duration", p.getDurationMinutes(),
-                "basePrice", p.getBasePrice(),
-                "soldCount", 0 // 联调阶段暂不统计
-            ))
+            .map(p -> {
+                long sold = scheduleService.listPublic(p.getId()).stream()
+                    .mapToLong(s -> ticketRepository.countByScheduleIdAndStatus(s.id(), TicketStatus.SOLD))
+                    .sum();
+                return Map.<String, Object>of(
+                    "id", p.getId(),
+                    "name", p.getName(),
+                    "poster", p.getPosterUrl() != null ? p.getPosterUrl() : "",
+                    "typeName", p.getType(),
+                    "duration", p.getDurationMinutes(),
+                    "basePrice", p.getBasePrice(),
+                    "soldCount", sold
+                );
+            })
             .toList();
 
         // 近期演出（取前6条）
@@ -630,16 +635,21 @@ public class CustomerCompatController {
         @RequestParam(required = false) String type,
         @RequestParam(required = false, defaultValue = "10") int limit
     ) {
-        // 联调阶段返回静态榜单
+        // 统计实际销售额（从数据库计算已售金额）
         List<Map<String, Object>> list = playService.search(null).stream()
             .limit(limit)
-            .map(p -> Map.<String, Object>of(
-                "rank", 1,
-                "playId", p.getId(),
-                "playName", p.getName(),
-                "poster", p.getPosterUrl() != null ? p.getPosterUrl() : "",
-                "sales", 0
-            ))
+            .map(p -> {
+                double sales = scheduleService.listPublic(p.getId()).stream()
+                    .mapToDouble(s -> ticketRepository.sumPriceByScheduleIdAndStatus(s.id(), TicketStatus.SOLD).doubleValue())
+                    .sum();
+                return Map.<String, Object>of(
+                    "rank", 1,
+                    "playId", p.getId(),
+                    "playName", p.getName(),
+                    "poster", p.getPosterUrl() != null ? p.getPosterUrl() : "",
+                    "sales", sales
+                );
+            })
             .toList();
         return AdminApiResponse.ok(Map.of("list", list));
     }

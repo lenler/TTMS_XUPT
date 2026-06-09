@@ -32,7 +32,7 @@ function RegisterPage() {
       <div className="border border-warm bg-cream rounded-sm p-8">
         {/* 品牌标题 */}
         <h1 className="font-serif text-2xl text-ink tracking-widest text-center mb-8">
-          汉唐剧院
+          奥斯卡剧院
         </h1>
 
         <Form onFinish={onFinish} size="large" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>

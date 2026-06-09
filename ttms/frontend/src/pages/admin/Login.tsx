@@ -56,7 +56,7 @@ function AdminLoginPage() {
     >
       <Card style={{ width: 400, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
         <Title level={3} style={{ textAlign: 'center', marginBottom: 32 }}>
-          汉唐剧院票务管理系统
+          奥斯卡剧院票务管理系统
         </Title>
         <Form
           name="adminLogin"
