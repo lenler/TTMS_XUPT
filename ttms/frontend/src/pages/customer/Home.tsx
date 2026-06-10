@@ -7,7 +7,7 @@ import { Typography, Spin, Empty, Tag, Button } from 'antd';
 import { FireOutlined, ClockCircleOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import { getHome } from '@/services/customer/home';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 interface HotPlay {
   id: number; name: string; poster: string; typeName: string;
@@ -71,9 +71,16 @@ function HomePage() {
               className="border border-warm bg-cream rounded-sm overflow-hidden cursor-pointer
                          hover:border-stone hover:shadow-sm transition-soft group"
             >
-              {/* 封面占位 */}
-              <div className="h-48 bg-cream flex items-center justify-center group-hover:opacity-80 transition-soft">
-                <Text className="text-6xl text-light-ink">🎭</Text>
+              {/* 海报封面 */}
+              <div className="h-48 bg-cream relative flex items-center justify-center overflow-hidden">
+                <span className="text-6xl text-light-ink absolute">🎭</span>
+                {play.poster && (
+                  <img
+                    src={play.poster}
+                    alt={play.name}
+                    className="relative w-full h-full object-cover group-hover:opacity-80 transition-soft z-10"
+                  />
+                )}
               </div>
               <div className="p-4">
                 <h3 className="font-serif text-lg text-ink mb-2 truncate">{play.name}</h3>
