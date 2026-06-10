@@ -113,6 +113,7 @@ public class AdminManagementCompatController {
         @RequestParam(required = false, defaultValue = "10") int pageSize
     ) {
         List<AdminPlayView> plays = playService.search(keyword).stream()
+            .filter(play -> play.getStatus() == Status.ACTIVE)
             .filter(play -> type == null || resolveTypeId(play.getType()) == type)
             .filter(play -> lang == null || resolveLangId(play.getLanguage()) == lang)
             .map(this::toAdminPlay)
