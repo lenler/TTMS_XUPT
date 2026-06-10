@@ -1,8 +1,12 @@
 // 支付结果页 —— 水墨留白 · 东方极简
 // 成功/失败结果 + 票务信息卡片
+// 支持两种数据来源：location.state（立即展示） 或 API 回退（页面刷新/直接访问）
 
+import { useEffect, useState } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
+import { Spin } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { getOrder } from '@/services/customer/order';
 
 interface TicketInfo {
   ticketId: number; seatRow: number; seatCol: number;
@@ -18,7 +22,35 @@ interface PayResultData {
 function ResultPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const location = useLocation();
-  const data = (location.state as PayResultData) || null;
+  const locationData = (location.state as PayResultData) || null;
+  const [data, setData] = useState<PayResultData | null>(locationData);
+  const [loading, setLoading] = useState(!locationData);
+
+  // 如果 location.state 为空，尝试通过 API 获取订单数据
+  useEffect(() => {
+    if (locationData || !orderId) return;
+    setLoading(true);
+    getOrder(Number(orderId))
+      .then((res) => {
+        setData({
+          orderId: res.data.orderId,
+          orderStatus: res.data.orderStatus,
+          tickets: res.data.tickets,
+        });
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [orderId, locationData]);
+
+  // 加载中
+  if (loading) {
+    return (
+      <div className="max-w-md mx-auto text-center py-20">
+        <Spin size="large" />
+        <p className="text-stone mt-4">正在获取订单信息...</p>
+      </div>
+    );
+  }
 
   // 无数据
   if (!data) {
@@ -27,13 +59,24 @@ function ResultPage() {
         <ExclamationCircleOutlined className="text-5xl text-gold mb-4" />
         <h1 className="font-serif text-2xl text-ink mb-2">暂无订单信息</h1>
         <p className="text-stone mb-6">无法获取订单结果，请查看我的订单</p>
-        <Link
-          to="/orders"
-          className="inline-block border border-ink text-ink px-6 py-2 rounded-sm
-                     hover:bg-ink hover:text-white transition-soft"
-        >
-          查看我的订单
-        </Link>
+        <div className="flex justify-center gap-3">
+          {orderId && (
+            <Link
+              to={`/order?orderId=${orderId}`}
+              className="inline-block border border-warm text-stone px-6 py-2 rounded-sm
+                         hover:border-ink hover:text-ink transition-soft"
+            >
+              返回订单页
+            </Link>
+          )}
+          <Link
+            to="/orders"
+            className="inline-block border border-ink text-ink px-6 py-2 rounded-sm
+                       hover:bg-ink hover:text-white transition-soft"
+          >
+            查看我的订单
+          </Link>
+        </div>
       </div>
     );
   }
@@ -56,6 +99,19 @@ function ResultPage() {
           {isSuccess ? `订单号：${orderId}` : '请重新尝试支付'}
         </p>
       </div>
+
+      {/* 支付失败：导向订单页重新支付 */}
+      {!isSuccess && (
+        <div className="text-center mb-8">
+          <Link
+            to={`/order?orderId=${data.orderId}`}
+            className="inline-block bg-gold text-white px-8 py-2.5 rounded-sm font-medium
+                       hover:bg-[#B8944F] transition-soft"
+          >
+            返回订单页重新支付
+          </Link>
+        </div>
+      )}
 
       {/* 票务信息 */}
       {isSuccess && (

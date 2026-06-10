@@ -613,6 +613,26 @@ public class CustomerCompatController {
         return AdminApiResponse.ok(AdminPageData.of(items, page, pageSize));
     }
 
+    /** 取消锁定座位 */
+    @PostMapping("/orders/unlock")
+    public AdminApiResponse<Void> unlockSeats(@RequestBody Map<String, Object> body) {
+        String lockToken = (String) body.get("lockToken");
+        if (lockToken == null || lockToken.isBlank()) {
+            throw new BusinessException("缺少锁座令牌");
+        }
+        LockSession session = lockSessions.remove(lockToken);
+        if (session == null) {
+            // 会话不存在或已过期，无需处理
+            return AdminApiResponse.ok(null);
+        }
+        for (Ticket ticket : session.tickets) {
+            ticket.setStatus(TicketStatus.AVAILABLE);
+            ticket.setLockTime(null);
+            ticketRepository.save(ticket);
+        }
+        return AdminApiResponse.ok(null);
+    }
+
     /** 退票 */
     @PostMapping("/orders/{id}/refund")
     public AdminApiResponse<Map<String, Object>> refundOrder(@PathVariable Long id, @RequestBody Map<String, Object> body) {

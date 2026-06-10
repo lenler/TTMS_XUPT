@@ -113,3 +113,8 @@ export function getMyOrders(
 export function refundOrder(id: number, ticketIds: number[]): Promise<ApiResponse<RefundResult>> {
   return request.post(`/customer/api/orders/${id}/refund`, { ticketIds });
 }
+
+/** 取消锁定座位 */
+export function unlockSeats(lockToken: string): Promise<ApiResponse<null>> {
+  return request.post('/customer/api/orders/unlock', { lockToken });
+}

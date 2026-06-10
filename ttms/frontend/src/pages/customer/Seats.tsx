@@ -6,7 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Typography, Spin, Empty, message } from 'antd';
 import { ClockCircleOutlined } from '@ant-design/icons';
 import { getScheduleById } from '@/services/customer/schedule';
-import { lockSeats, createOrder, payOrder } from '@/services/customer/order';
+import { lockSeats, createOrder, unlockSeats } from '@/services/customer/order';
 import { useCartStore } from '@/stores/cartStore';
 
 const { Text } = Typography;
@@ -37,14 +37,26 @@ function SeatsPage() {
 
   const { setLockInfo, clearCart } = useCartStore();
 
+  // 进入页面时清空旧购物车状态
   useEffect(() => {
     if (!scheduleId) return;
+    clearCart();
+    setRemainSeconds(0);
+    setSelectedIds([]);
+    setLocking(false);
     setLoading(true);
     getScheduleById(Number(scheduleId))
       .then((res) => setDetail(res.data))
       .catch(() => {})
       .finally(() => setLoading(false));
-    return () => { clearCart(); };
+    // 离开页面时释放锁定座位
+    return () => {
+      const { lockToken: currentLockToken } = useCartStore.getState();
+      if (currentLockToken) {
+        unlockSeats(currentLockToken).catch(() => {});
+        clearCart();
+      }
+    };
   }, [scheduleId]);
 
   // 倒计时
@@ -52,7 +64,16 @@ function SeatsPage() {
     if (remainSeconds <= 0) return;
     const timer = setInterval(() => {
       setRemainSeconds((prev) => {
-        if (prev <= 1) { message.warning('锁座已过期，请重新选择'); return 0; }
+        if (prev <= 1) {
+          // 倒计时结束，释放后端锁定
+          const { lockToken: expiredLockToken } = useCartStore.getState();
+          if (expiredLockToken) {
+            unlockSeats(expiredLockToken).catch(() => {});
+            clearCart();
+          }
+          message.warning('锁座已过期，请重新选择');
+          return 0;
+        }
         return prev - 1;
       });
     }, 1000);
@@ -91,17 +112,28 @@ function SeatsPage() {
     finally { setLocking(false); }
   };
 
-  /** 确认下单 */
+  /** 确认下单（只创建订单，跳转到确认页让用户手动支付） */
   const handleConfirm = async () => {
     const { lockToken } = useCartStore.getState();
     if (!lockToken) return;
     try {
       const orderRes = await createOrder({ lockToken });
-      await payOrder(orderRes.data.orderId, {
-        paymentMethod: 'balance',
-        paymentPassword: '123456',
-      });
+      // 下单成功后清除锁座信息（锁座会话已被订单消费）
+      useCartStore.setState({ lockToken: null, expireAt: null });
       navigate(`/order?orderId=${orderRes.data.orderId}`, { replace: true });
+    } catch { /* 错误已提示 */ }
+  };
+
+  /** 取消锁定，释放座位 */
+  const handleCancelLock = async () => {
+    const { lockToken } = useCartStore.getState();
+    if (!lockToken) return;
+    try {
+      await unlockSeats(lockToken);
+      clearCart();
+      setRemainSeconds(0);
+      setSelectedIds([]);
+      message.info('已取消锁定，座位已释放');
     } catch { /* 错误已提示 */ }
   };
 
@@ -244,13 +276,22 @@ function SeatsPage() {
               {locking ? '锁定中...' : '锁定座位'}
             </button>
           ) : (
-            <button
-              onClick={handleConfirm}
-              className="bg-gold text-white px-8 py-2.5 rounded-sm font-medium
-                         hover:bg-[#B8944F] transition-soft cursor-pointer"
-            >
-              确认下单
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleCancelLock}
+                className="border border-stone text-stone px-6 py-2.5 rounded-sm font-medium
+                           hover:border-ink hover:text-ink transition-soft cursor-pointer"
+              >
+                取消锁定
+              </button>
+              <button
+                onClick={handleConfirm}
+                className="bg-gold text-white px-8 py-2.5 rounded-sm font-medium
+                           hover:bg-[#B8944F] transition-soft cursor-pointer"
+              >
+                确认下单
+              </button>
+            </div>
           )}
         </div>
       </div>
