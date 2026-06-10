@@ -129,7 +129,7 @@ public class SaleServiceImpl implements SaleService {
             if (ticket.getStatus() == TicketStatus.CHECKED) {
                 throw new BusinessException("已验票不能退票");
             }
-            ticket.setStatus(TicketStatus.REFUNDED);
+            ticket.setStatus(TicketStatus.AVAILABLE);
             ticket.setLockTime(null);
             ticketRepository.save(ticket);
         }
