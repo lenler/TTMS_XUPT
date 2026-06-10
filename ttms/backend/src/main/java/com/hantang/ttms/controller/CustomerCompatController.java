@@ -96,8 +96,9 @@ public class CustomerCompatController {
     /** 获取首页数据：热卖剧目 + 近期演出 */
     @GetMapping("/home")
     public AdminApiResponse<Map<String, Object>> home() {
-        // 热卖剧目（取前4条）
+        // 热卖剧目（仅ACTIVE，取前4条）
         List<Map<String, Object>> hotPlays = playService.search(null).stream()
+            .filter(p -> p.getStatus() == Status.ACTIVE)
             .limit(4)
             .map(p -> {
                 long sold = scheduleService.listPublic(p.getId()).stream()
