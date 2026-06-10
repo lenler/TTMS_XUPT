@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -43,10 +44,21 @@ public class FileUploadController {
             throw new BusinessException("文件为空");
         }
 
-        // 校验文件类型
+        // 校验文件类型（Content-Type）
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             throw new BusinessException("仅支持上传图片文件");
+        }
+
+        // 校验文件扩展名
+        Set<String> allowedExts = Set.of(".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp", ".bmp");
+        String originalName = file.getOriginalFilename();
+        String ext = ".jpg";
+        if (originalName != null && originalName.contains(".")) {
+            ext = originalName.substring(originalName.lastIndexOf(".")).toLowerCase();
+        }
+        if (!allowedExts.contains(ext)) {
+            throw new BusinessException("不支持的图片格式，允许：" + String.join(",", allowedExts));
         }
 
         // 校验文件大小（最大5MB）
@@ -54,12 +66,7 @@ public class FileUploadController {
             throw new BusinessException("图片大小不能超过5MB");
         }
 
-        // 生成文件名：日期/原始扩展名
-        String originalName = file.getOriginalFilename();
-        String ext = ".jpg";
-        if (originalName != null && originalName.contains(".")) {
-            ext = originalName.substring(originalName.lastIndexOf("."));
-        }
+        // 生成文件名：UUID + 扩展名
         String filename = UUID.randomUUID().toString().substring(0, 8) + ext;
         String datePath = LocalDate.now().toString();
         Path targetDir = uploadRoot.resolve(datePath);
