@@ -46,10 +46,6 @@ VALUES (1, 1, NOW(), NOW()), (2, 2, NOW(), NOW());
 -- 更多剧目（含海报）
 INSERT INTO plays (id, type, language, name, introduction, poster_url, duration_minutes, base_price, status, created_at, updated_at)
 VALUES
-  (2, '京剧', '中文', '贵妃醉酒', '经典京剧《贵妃醉酒》选段', '/images/2026-06-10/10e01e2e.jpeg', 90, 120.00, 'ACTIVE', NOW(), NOW()),
-  (3, '音乐剧', '中文', '丝路之声', '大型原创音乐剧，展现丝路千年文明', '/images/2026-06-10/1b77fd36.jpeg', 150, 180.00, 'ACTIVE', NOW(), NOW()),
-  (4, '相声', '中文', '笑满长安', '嘻哈包袱铺相声大会', '/images/2026-06-10/040b539e.jpeg', 120, 80.00, 'ACTIVE', NOW(), NOW()),
-  (5, '舞蹈', '中文', '唐韵', '唐代宫廷舞蹈专场演出', '/images/2026-06-10/24717406.jpeg', 100, 150.00, 'ACTIVE', NOW(), NOW()),
   (6, '儿童剧', '中文', '哪吒闹海', '亲子儿童剧《哪吒闹海》', '/images/2026-06-10/42d15e5d.jpeg', 90, 60.00, 'ACTIVE', NOW(), NOW()),
   (10, '歌舞剧', '中文', '梦回大唐', '大型史诗歌舞剧，重现盛唐气象', '/images/2026-06-10/menghuitang.jpg', 130, 200.00, 'ACTIVE', NOW(), NOW()),
   (11, '科幻剧', '中文', '三体·黑暗森林', '刘慈欣科幻巨著改编，宇宙社会学震撼呈现', '/images/2026-06-10/3e8f1d3a.png', 150, 160.00, 'ACTIVE', NOW(), NOW());
