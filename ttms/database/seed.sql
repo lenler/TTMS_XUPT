@@ -48,4 +48,4 @@ INSERT INTO plays (id, type, language, name, introduction, poster_url, duration_
 VALUES
   (6, '儿童剧', '中文', '哪吒闹海', '亲子儿童剧《哪吒闹海》', '/images/2026-06-10/42d15e5d.jpeg', 90, 60.00, 'ACTIVE', NOW(), NOW()),
   (10, '歌舞剧', '中文', '梦回大唐', '大型史诗歌舞剧，重现盛唐气象', '/images/2026-06-10/menghuitang.jpg', 130, 200.00, 'ACTIVE', NOW(), NOW()),
-  (11, '科幻剧', '中文', '三体·黑暗森林', '刘慈欣科幻巨著改编，宇宙社会学震撼呈现', '/images/2026-06-10/3e8f1d3a.png', 150, 160.00, 'ACTIVE', NOW(), NOW());
+  (11, '科幻剧', '中文', '三体·黑暗森林', '刘慈欣科幻巨著改编，宇宙社会学震撼呈现', '/images/2026-06-10/santi.jpg', 150, 160.00, 'ACTIVE', NOW(), NOW());
