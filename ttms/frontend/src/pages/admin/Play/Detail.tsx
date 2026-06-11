@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Select, Upload, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
+import type { UploadFile } from 'antd/es/upload';
 import { createPlay, updatePlay, getDicts } from '@/services/admin/play';
+import request from '@/services/request';
 import type { Play } from '@/types/models';
-import type { UploadFile, RcFile } from 'antd/es/upload';
 
 interface PlayDetailModalProps {
   open: boolean;
@@ -70,31 +71,48 @@ function PlayDetailModal({ open, play, onClose, onSuccess }: PlayDetailModalProp
     }
   }, [open, play, form]);
 
-  /** 上传前校验 */
-  const beforeUpload = (file: RcFile) => {
-    const isImage = file.type.startsWith('image/');
-    if (!isImage) {
+  /** 自定义上传：校验后用 axios 发送，正确解析 API 响应 */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const customUpload = async (options: any) => {
+    const { file, onSuccess, onError } = options;
+
+    // 客户端校验
+    if (!file.type?.startsWith('image/')) {
       message.error('只能上传图片文件');
-      return Upload.LIST_IGNORE;
+      onError?.(new Error('非图片文件'));
+      return;
     }
-    const isLt5M = file.size / 1024 / 1024 < 5;
-    if (!isLt5M) {
+    if (file.size > 5 * 1024 * 1024) {
       message.error('图片大小不能超过5MB');
-      return Upload.LIST_IGNORE;
+      onError?.(new Error('文件过大'));
+      return;
     }
-    return true;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await request.post('/admin/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const uploadedUrl: string = res.data?.url || '';
+      onSuccess?.({ url: uploadedUrl }, file);
+    } catch (err) {
+      onError?.(err as Error);
+    }
   };
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      // 优先使用上传的海报URL
-      const posterUrl =
-        posterFile.length > 0 && posterFile[0].response?.url
-          ? posterFile[0].response.url
-          : posterFile.length > 0 && posterFile[0].url
-            ? posterFile[0].url
-            : values.poster || '';
+      // 优先取上传成功的 URL，其次取现有海报 URL，最后取手动输入的 URL
+      let posterUrl = values.poster || '';
+      if (posterFile.length > 0) {
+        const f = posterFile[0];
+        const uploaded = (f as UploadFile & { url?: string }).url;
+        if (uploaded && uploaded !== '__uploading__') {
+          posterUrl = uploaded;
+        }
+      }
       setSaving(true);
       const payload = { ...values, poster: posterUrl };
       if (isEdit) {
@@ -167,28 +185,23 @@ function PlayDetailModal({ open, play, onClose, onSuccess }: PlayDetailModalProp
           </Form.Item>
         </div>
         <Form.Item name="poster" label="海报图片">
-          <div className="flex items-center gap-3">
-            <Upload
-              accept="image/*"
-              maxCount={1}
-              fileList={posterFile}
-              beforeUpload={beforeUpload}
-              onChange={({ fileList }) => setPosterFile(fileList)}
-              action="/admin/api/upload"
-              name="file"
-              showUploadList={{ showPreviewIcon: true, showRemoveIcon: true }}
-              listType="picture-card"
-            >
-              {posterFile.length === 0 && (
-                <div>
-                  <UploadOutlined />
-                  <div className="mt-2">上传海报</div>
-                </div>
-              )}
-            </Upload>
-            <span className="text-light-ink text-xs">或填写URL：</span>
-          </div>
-          <Input placeholder="例：/images/plays/thunderstorm.jpg" className="mt-2" />
+          <Upload
+            accept="image/*"
+            maxCount={1}
+            fileList={posterFile}
+            customRequest={customUpload}
+            onChange={({ fileList }) => setPosterFile(fileList)}
+            showUploadList={{ showPreviewIcon: true, showRemoveIcon: true }}
+            listType="picture-card"
+          >
+            {posterFile.length === 0 && (
+              <div>
+                <UploadOutlined />
+                <div className="mt-2">上传海报</div>
+              </div>
+            )}
+          </Upload>
+          <Input placeholder="或填写图片URL，例：https://example.com/poster.jpg" className="mt-2" />
         </Form.Item>
         <Form.Item name="video" label="宣传片地址">
           <Input placeholder="例：/videos/plays/thunderstorm.mp4（选填）" />
