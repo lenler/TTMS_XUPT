@@ -1,6 +1,6 @@
 // 角色管理列表页
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { message, Tag } from 'antd';
 import PageTable from '@/components/common/PageTable';
 import { getRoles, deleteRole } from '@/services/admin/role';
@@ -94,6 +94,12 @@ function RoleListPage() {
     setDetailOpen(false);
     setEditingRole(null);
   };
+
+  /** 组件挂载时加载角色列表 */
+  useEffect(() => {
+    fetchList();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /** 新增/修改成功 */
   const handleDetailSuccess = () => {

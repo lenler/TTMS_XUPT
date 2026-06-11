@@ -119,31 +119,17 @@ function AdminLayout() {
         collapsed={collapsed}
         onCollapse={setCollapsed}
         breakpoint="lg"
-        theme="dark"
         width={220}
+        style={{ background: themeToken.colorBgContainer }}
       >
-        <div
-          style={{
-            height: 48,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontSize: collapsed ? 16 : 18,
-            fontWeight: 'bold',
-            borderBottom: '1px solid rgba(255,255,255,0.1)',
-          }}
-        >
-          {collapsed ? 'TT' : 'TTMS'}
-        </div>
         {antdMenuItems.length > 0 ? (
           <Menu
-            theme="dark"
             mode="inline"
             selectedKeys={[selectedKey]}
             defaultOpenKeys={openKeys}
             items={antdMenuItems}
             onClick={handleMenuClick}
+            style={{ background: themeToken.colorBgContainer }}
           />
         ) : (
           <div style={{ textAlign: 'center', padding: 24 }}>
