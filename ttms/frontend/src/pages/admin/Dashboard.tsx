@@ -1,4 +1,4 @@
-// 管理端工作台/首页：关键指标概览 + 快捷入口
+// 管理端工作台首页：关键经营指标概览 + 快捷功能入口卡片
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
