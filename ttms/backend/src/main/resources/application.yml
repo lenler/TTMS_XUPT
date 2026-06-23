@@ -24,4 +24,4 @@ ttms:
       - http://117.78.10.48
       - http://117.78.10.48:80
   ticket:
-    lock-timeout-minutes: 10
+    lock-timeout-minutes: 15
