@@ -19,12 +19,26 @@ import com.hantang.ttms.repository.ScheduleRepository;
 import com.hantang.ttms.repository.TicketRepository;
 import com.hantang.ttms.service.FinanceService;
 
+/**
+ * 财务统计业务服务实现
+ *
+ * 提供三维度财务数据汇总：
+ * 1. 日报：按日期 + 可选员工筛选，统计当日售票金额/数量
+ * 2. 剧院汇总：按日期区间聚合统计
+ * 3. 排期汇总：按指定排期统计售票情况
+ *
+ * 统计口径：
+ * - 仅统计状态为 PAID 的订单（待支付和已取消的不计入）
+ * - 售票金额 = 各订单明细票款合计
+ * - 上座率 = 已检票数 / 总票数 × 100%
+ */
 @Service
 public class FinanceServiceImpl implements FinanceService {
     private final SaleRepository saleRepository;
     private final TicketRepository ticketRepository;
     private final ScheduleRepository scheduleRepository;
 
+    /** 构造函数注入三个数据访问层依赖 */
     public FinanceServiceImpl(
         SaleRepository saleRepository,
         TicketRepository ticketRepository,
@@ -35,6 +49,11 @@ public class FinanceServiceImpl implements FinanceService {
         this.scheduleRepository = scheduleRepository;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * 日期为空时默认统计当天
+     */
     @Override
     public FinanceSummaryResponse dailySummary(LocalDate date, Long employeeId) {
         LocalDate target = date == null ? LocalDate.now() : date;
@@ -43,17 +62,35 @@ public class FinanceServiceImpl implements FinanceService {
         List<Sale> sales = employeeId == null
             ? saleRepository.findBySaleTimeBetween(start, end)
             : saleRepository.findByEmployeeIdAndSaleTimeBetween(employeeId, start, end);
-        return summarizeSales(sales, ticketRepository.countByStatus(TicketStatus.CHECKED), ticketRepository.count());
+        return summarizeSales(sales,
+            ticketRepository.countByStatus(TicketStatus.CHECKED),
+            ticketRepository.count());
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * 日期为空时默认统计当天
+     */
     @Override
     public FinanceSummaryResponse theaterSummary(LocalDate startDate, LocalDate endDate) {
         LocalDate startDay = startDate == null ? LocalDate.now() : startDate;
         LocalDate endDay = endDate == null ? startDay : endDate;
-        List<Sale> sales = saleRepository.findBySaleTimeBetween(startDay.atStartOfDay(), endDay.plusDays(1).atStartOfDay());
-        return summarizeSales(sales, ticketRepository.countByStatus(TicketStatus.CHECKED), ticketRepository.count());
+        List<Sale> sales = saleRepository.findBySaleTimeBetween(
+            startDay.atStartOfDay(), endDay.plusDays(1).atStartOfDay());
+        return summarizeSales(sales,
+            ticketRepository.countByStatus(TicketStatus.CHECKED),
+            ticketRepository.count());
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * 统计该排期的：
+     * - 售票金额（SOLD + CHECKED 状态的票款合计）
+     * - 售票数 + 检票数
+     * - 上座率
+     */
     @Override
     public FinanceSummaryResponse scheduleSummary(Long scheduleId) {
         if (!scheduleRepository.existsById(scheduleId)) {
@@ -64,22 +101,46 @@ public class FinanceServiceImpl implements FinanceService {
             + ticketRepository.countByScheduleIdAndStatus(scheduleId, TicketStatus.CHECKED);
         long checked = ticketRepository.countByScheduleIdAndStatus(scheduleId, TicketStatus.CHECKED);
         BigDecimal amount = ticketRepository.findByScheduleId(scheduleId).stream()
-            .filter(ticket -> ticket.getStatus() == TicketStatus.SOLD || ticket.getStatus() == TicketStatus.CHECKED)
+            .filter(ticket -> ticket.getStatus() == TicketStatus.SOLD
+                || ticket.getStatus() == TicketStatus.CHECKED)
             .map(ticket -> ticket.getPrice())
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         return new FinanceSummaryResponse(amount, 0, sold, checked, total, rate(checked, total));
     }
 
+    /**
+     * 汇总订单列表的财务数据
+     *
+     * @param sales 订单列表
+     * @param checkedTicketCount 全系统已检票总数
+     * @param totalTicketCount 全系统总票数
+     * @return 财务汇总响应
+     */
     private FinanceSummaryResponse summarizeSales(List<Sale> sales, long checkedTicketCount, long totalTicketCount) {
-        List<Sale> paidSales = sales.stream().filter(sale -> sale.getStatus() == SaleStatus.PAID).toList();
+        // 仅统计已支付订单
+        List<Sale> paidSales = sales.stream()
+            .filter(sale -> sale.getStatus() == SaleStatus.PAID)
+            .toList();
+        // 售票金额 = 所有已支付订单明细票款合计
         BigDecimal amount = paidSales.stream()
             .flatMap(sale -> sale.getItems().stream())
             .map(SaleItem::getPrice)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
-        long sold = paidSales.stream().mapToLong(sale -> sale.getItems().size()).sum();
-        return new FinanceSummaryResponse(amount, paidSales.size(), sold, checkedTicketCount, totalTicketCount, rate(checkedTicketCount, totalTicketCount));
+        // 售票数 = 所有已支付订单的票数合计
+        long sold = paidSales.stream()
+            .mapToLong(sale -> sale.getItems().size())
+            .sum();
+        return new FinanceSummaryResponse(amount, paidSales.size(), sold,
+            checkedTicketCount, totalTicketCount, rate(checkedTicketCount, totalTicketCount));
     }
 
+    /**
+     * 计算百分比比率
+     *
+     * @param numerator 分子（如已检票数）
+     * @param denominator 分母（如总票数）
+     * @return 百分比值，保留 2 位小数，分母为 0 时返回 0
+     */
     private BigDecimal rate(long numerator, long denominator) {
         if (denominator == 0) {
             return BigDecimal.ZERO;
