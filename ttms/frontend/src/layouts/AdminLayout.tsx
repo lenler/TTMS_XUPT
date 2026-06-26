@@ -16,7 +16,6 @@ import {
   UserOutlined,
   SafetyCertificateOutlined,
   BarChartOutlined,
-  InfoCircleOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
@@ -43,7 +42,6 @@ const iconMap: Record<string, React.ReactNode> = {
   '角色管理': <SafetyCertificateOutlined />,
   '财务管理': <BarChartOutlined />,
   '财务统计': <BarChartOutlined />,
-  '关于': <InfoCircleOutlined />,
 };
 
 /** 将 authStore 的 MenuItem 转为 antd Menu 的 items 格式 */

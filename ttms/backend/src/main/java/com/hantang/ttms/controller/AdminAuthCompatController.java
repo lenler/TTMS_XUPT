@@ -150,9 +150,7 @@ public class AdminAuthCompatController {
             // 财务管理（含子菜单）
             Map.<String, Object>of("name", "财务管理", "children", List.of(
                 Map.<String, Object>of("name", "财务统计", "url", "/admin/finance")
-            )),
-            // 关于（一级菜单，无子级）
-            Map.<String, Object>of("name", "关于", "url", "/admin/about")
+            ))
         );
     }
 }
